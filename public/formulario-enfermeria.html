@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Enfermería</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+
+    <header class="bg-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-blue-500 rounded-full p-2">
+                        <img src="images/logo_iapos.png" alt="Logo IAPOS" class="h-20"> 
+                    </div>
+                    <h1 class="text-xl font-bold">Formulario de Enfermería</h1>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center py-8">
+        <div class="container mx-auto p-6 bg-white rounded-xl shadow-lg max-w-4xl border border-blue-200">
+            <h2 class="text-2xl font-bold text-blue-800 mb-6 text-center">Datos del Paciente y Carga</h2>
+
+            <div id="patient-info-display" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div>
+                    <label for="dni" class="block text-gray-700 text-sm font-bold mb-2">DNI:</label>
+                    <input type="text" id="dni" name="DNI" autocomplete="off" required
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm">
+                </div>
+                <div>
+                    <label for="nombre" class="block text-gray-700 text-sm font-bold mb-2">Nombre:</label>
+                    <input type="text" id="nombre" name="Nombre" autocomplete="off" required
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm">
+                </div>
+                <div>
+                    <label for="apellido" class="block text-gray-700 text-sm font-bold mb-2">Apellido:</label>
+                    <input type="text" id="apellido" name="Apellido" autocomplete="off" required
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm">
+                </div>
+                </div>
+
+            <form id="enfermeriaForm" class="mt-8">
+                <div class="w-full bg-blue-100 rounded-full h-2.5 mb-8">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-in-out" style="width: 0%;"></div>
+                </div>
+
+                <div id="form-steps-container">
+                    <div class="form-step" data-step="1">
+                        <h3 class="text-xl font-bold text-blue-800 mb-4">1. Mediciones</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="altura" class="block text-sm font-medium text-gray-700">Altura (cm)</label>
+                                <input type="number" id="altura" name="Altura (cm)" placeholder="Ej: 175" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                            <div>
+                                <label for="peso" class="block text-sm font-medium text-gray-700">Peso (kg)</label>
+                                <input type="number" id="peso" name="Peso (kg)" placeholder="Ej: 70" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label for="circunferencia" class="block text-sm font-medium text-gray-700">Circunferencia de cintura (cm)</label>
+                            <input type="number" id="circunferencia" name="Circunferencia de cintura (cm)" placeholder="Ej: 85" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div class="mt-4">
+                            <label for="presion_arterial" class="block text-sm font-medium text-gray-700">Presión Arterial (mmhg)</label>
+                            <input type="text" id="presion_arterial" name="Presion Arterial (mmhg)" placeholder="Ej: 120/80" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                    </div>
+
+                    <div class="form-step hidden" data-step="2">
+                        <h3 class="text-xl font-bold text-blue-800 mb-4">2. Vacunas y Documentación</h3>
+                        <div>
+                            <label for="vacunas" class="block text-sm font-medium text-gray-700">Vacunas</label>
+                            <select id="vacunas" name="Vacunas" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Seleccione una opción</option>
+                                <option value="Esquema completo">Esquema completo</option>
+                                <option value="Esquema incompleto">Esquema incompleto</option>
+                                <option value="No se realiza">No se realiza</option>
+                            </select>
+                        </div>
+                        <div class="mt-4">
+                        <label for="agudeza_visual" class="block text-sm font-medium text-gray-700">Agudeza Visual</label>
+                        <select id="agudeza_visual" name="Agudeza Visual" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Seleccione una opción</option>
+                            <option value="Control Normal">Control Normal</option>
+                            <option value="Alterada">Alterada</option>
+                            <option value="No se Realiza">No se Realiza</option>
+                        </select>
+                        </div>
+                        <div class="mt-4">
+                            <label for="espirometria_pdf" class="block text-sm font-medium text-gray-700">Espirometria (Enlace a PDF)</label>
+                            <input type="text" id="espirometria_pdf" name="Espirometria (Enlace a PDF)" placeholder="Pega aquí el enlace al PDF" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-between">
+                    <button type="button" id="prev-step-btn"
+                        class="inline-flex justify-center items-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-150 ease-in-out hidden">
+                        <i class="fas fa-arrow-left mr-2"></i>Anterior
+                    </button>
+                    <button type="button" id="next-step-btn"
+                        class="inline-flex justify-center items-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Siguiente<i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                    <button type="submit" id="guardar-enfermeria-btn"
+                        class="inline-flex justify-center items-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out hidden">
+                        <i class="fas fa-save mr-2"></i>Guardar Datos
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script src="formulario-enfermeria.js"></script>
+</body>
+</html>

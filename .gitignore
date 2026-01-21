@@ -1,0 +1,18 @@
+# Dependencias y módulos
+node_modules/
+
+# Archivos de entorno y credenciales
+.env
+credentials.json
+
+# Archivos generados por el sistema
+.DS_Store
+
+# Archivos de configuración local
+*.local
+
+# Archivos de bloqueo
+package-lock.json
+
+# Logs
+*.log

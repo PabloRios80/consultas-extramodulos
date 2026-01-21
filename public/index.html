@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Día Preventivo IAPOS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="bg-gray-50">
+
+    <header class="bg-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="bg-blue-500 rounded-full p-2"> 
+                    <img src="images/logo_iapos.png" alt="Logo IAPOS" class="h-20"> 
+                </div>
+                <h1 class="text-xl font-bold">Día Preventivo IAPOS</h1>
+            </div>
+        </div>
+    </header>
+    <main class="container mx-auto px-4 py-8 text-center flex flex-col items-center">
+        <h2 class="text-3xl font-bold text-blue-800 mb-4">Bienvenido al Portal Profesional del Día Preventivo IAPOS</h2>
+        <p class="text-gray-700 max-w-2xl mx-auto mb-8">
+            El programa "Día Preventivo IAPOS" es una iniciativa para cuidar la salud de nuestros afiliados. A través de este portal, los profesionales pueden acceder a herramientas, información y formularios específicos.
+        </p>
+
+        <div class="flex flex-row flex-wrap justify-center w-full max-w-4xl mx-auto gap-4">
+
+            <a id="medicos-btn" href="index-medico.html" class="portal-btn bg-red-600 hover:bg-red-700 text-white flex-1 min-w-[200px]">
+                <i class="fas fa-user-md text-3xl mb-2"></i>
+                <span class="font-semibold">Portal Médicas/os Preventivistas</span>
+            </a>
+
+            <a id="enfermeria-btn" href="index-enfermeria.html" class="portal-btn bg-green-600 hover:bg-green-700 text-white flex-1 min-w-[200px]">
+                <i class="fas fa-stethoscope text-3xl mb-2"></i>
+                <span class="font-semibold">Portal Enfermeria Preventivista</span>
+            </a>
+
+            <a id="odontologia-btn" href="https://formulario-odontologia.onrender.com" class="portal-btn bg-blue-600 hover:bg-blue-700 text-white flex-1 min-w-[200px]">
+                <i class="fas fa-tooth text-3xl mb-2"></i>
+                <span class="font-semibold">Portal Odontologia Preventivista</span>
+            </a>
+
+            <a id="preventivista-info-btn" href="https://ppdt-preventivistas.onrender.com" 
+                class="portal-btn bg-yellow-500 hover:bg-yellow-600 text-gray-900 flex-1 min-w-[200px]">
+                <i class="fas fa-info-circle text-3xl mb-2"></i> 
+                <span class="font-semibold">Portal del Preventivista</span>
+            </a>
+        </div>
+    </main>
+    <style>
+        .portal-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            border-radius: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-height: 150px;
+        }
+        .portal-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .smaller-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            transition: background-color 0.2s, transform 0.2s;
+            text-align: center;
+        }
+        .smaller-btn:hover {
+            transform: translateY(-3px);
+        }
+    </style>
+    <script src="app.js?v=2.0"></script>
+</body>
+</html>

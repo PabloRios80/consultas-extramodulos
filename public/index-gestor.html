@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Afiliados IAPOS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-blue-600 text-white shadow-lg">
+    <div class="container mx-auto px-4 py-4">
+        <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div class="flex items-center space-x-4">
+                <div class="bg-blue-500 rounded-full p-2"> 
+                    <img src="images/logo_iapos.png" alt="Logo IAPOS" class="h-20"> 
+                </div>
+                <h1 class="text-xl font-bold">Consulta de Afiliados IAPOS</h1>
+            </div>
+            
+            <div class="md:col-span-2 flex justify-end mt-4"> 
+                <button id="generar-informe-btn" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 shadow-md text-sm">
+                    Generar Informe de Seguimiento
+                </button>
+                <a href="cierre-formulario.html" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 shadow-md text-sm flex-shrink-0 flex items-center justify-center">
+                        <i class="fas fa-file-invoice mr-2"></i> Formulario de Cierre
+                    </a>
+                <a href="consultas.html" class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-300 shadow-md flex items-center justify-center">
+                        <i class="fas fa-stethoscope mr-2"></i>Consulta Médico Preventivista
+                    </a>
+                <a href="formulario-enfermeria.html" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-notes-medical mr-2"></i> Formulario de Enfermería
+                    </a>
+                <a href="estadisticas.html" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 shadow-md text-sm flex-shrink-0 flex items-center justify-center">
+                        <i class="fas fa-chart-bar mr-2"></i> Ver Estadísticas
+                    </a>
+                </div>
+
+            <div class="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2 w-full md:w-auto">
+                <div class="flex items-center space-x-2 w-full">
+                    <input type="text" id="dni" placeholder="Buscar por DNI" 
+                        class="w-full md:w-48 px-3 py-1 border border-blue-400 rounded-lg focus:outline-none focus:ring-1 focus:ring-white text-gray-800">
+                    <button id="consultar" class="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded-lg text-sm">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <div id="loading" class="text-blue-200 hidden ml-2">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </div>
+                <select id="practica" class="w-full md:w-64 px-3 py-1 border border-blue-400 rounded-lg focus:outline-none focus:ring-1 focus:ring-white text-gray-800">
+                    <option value="">Seleccione una práctica</option>
+                    <option value="Fecha_cierre_DP">Fecha de Cierre DP</option>
+                    <option value="Presion_Arterial">Presión Arterial</option>
+                    <option value="IMC">Índice de Masa Corporal</option>
+                    <option value="Agudeza_visual">Agudeza visual</option>
+                    <option value="Control_odontologico">Control odontológico</option>
+                    <option value="Alimentacion_saludable">Alimentación saludable</option>
+                    <option value="Actividad_fisica">Actividad física</option>
+                    <option value="Seguridad_vial">Seguridad vial</option>
+                    <option value="Caidas_en_adultos_mayores">Caídas en adultos mayores</option>
+                    <option value="Acido_folico">Ácido fólico</option>
+                    <option value="Abuso_alcohol">Abuso alcohol</option>
+                    <option value="Tabaco">Tabaco</option>
+                    <option value="Violencia">Violencia</option>
+                    <option value="Depresion">Depresión</option>
+                    <option value="ITS">ITS</option>
+                    <option value="Hepatitis_B">Hepatitis B</option>
+                    <option value="Hepatitis_C">Hepatitis C</option>
+                    <option value="VIH">VIH</option>
+                    <option value="Dislipemias">Dislipemias</option>
+                    <option value="Diabetes">Diabetes</option>
+                    <option value="Cancer_cervico_uterino_HPV">Cáncer cérvico-uterino (HPV)</option>
+                    <option value="Cancer_cervico_uterino_PAP">Cáncer cérvico-uterino (PAP)</option>
+                    <option value="Cancer_colon_SOMF">Cáncer de colon (SOMF)</option>
+                    <option value="Cancer_colon_Colonoscopia">Cáncer de colon (Colonoscopia)</option>
+                    <option value="Cancer_mama_Mamografia">Cáncer de mama (Mamografía)</option>
+                    <option value="ERC">ERC</option>
+                    <option value="EPOC">EPOC</option>
+                    <option value="Aneurisma_aorta">Aneurisma de aorta</option>
+                    <option value="Osteoporosis">Osteoporosis</option>
+                    <option value="Estratificacion_riesgo_CV">Riesgo CV</option>
+                    <option value="Aspirina">Aspirina</option>
+                    <option value="Inmunizaciones">Inmunizaciones</option>
+                    <option value="Profesional">Profesional</option> <!-- Columna añadida -->
+                    <option value="VDRL">VDRL</option>
+                    <option value="Prostata_PSA">Próstata (PSA)</option>
+                    <option value="Chagas">Chagas</option>
+                    <option value="Valor_CPO">Valor CPO</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        <div class="grid grid-cols-1 gap-6">
+            <!-- User Profile Card -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
+                    <div class="relative">
+                        <img src="https://randomuser.me/api/portraits/women/45.jpg" alt="User" 
+                            class="w-20 h-20 rounded-full border-4 border-blue-100">
+                    </div>
+                    <div class="text-center md:text-left">
+                        <h3 class="font-bold text-lg" id="user-name">Nombre Apellido</h3>
+                        <div class="mt-2 p-4 bg-blue-50 rounded-lg text-sm text-gray-700">
+                            <p id="welcome-message">¡Hola! Este programa es para ayudarte y acompañarte en el cuidado de tu salud...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-bold mb-4">Información del Afiliado</h2>
+            <div id="result" class="text-gray-700">
+                <p class="text-center text-gray-500 py-8">Ingrese un DNI para buscar afiliado</p>
+                </div>
+</div>
+
+<div id="previous-studies-message" class="hidden bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 mt-4 rounded">
+    </div>
+
+<!-- Health Risk Assessment -->
+<div class="bg-white rounded-xl shadow-md p-6" id="risk-assessment">
+    <h2 class="text-xl font-bold mb-4">Evaluación de Riesgo Cardiovascular</h2>
+    
+    <!-- Factores Principales (2 columnas) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <!-- Presión Arterial -->
+        <div id="pressure-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-heartbeat mr-2"></i>
+                <h3 class="font-semibold">Presión Arterial</h3>
+            </div>
+            <p id="pressure-value" class="text-2xl font-bold">--</p>
+            <p id="pressure-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- IMC -->
+        <div id="imc-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-weight mr-2"></i>
+                <h3 class="font-semibold">Índice de Masa Corporal</h3>
+            </div>
+            <p id="imc-value" class="text-2xl font-bold">--</p>
+            <p id="imc-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- Diabetes -->
+        <div id="diabetes-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-vial mr-2"></i>
+                <h3 class="font-semibold">Diabetes</h3>
+            </div>
+            <p id="diabetes-value" class="text-2xl font-bold">--</p>
+            <p id="diabetes-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- Dislipemias -->
+        <div id="dislipemia-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-tint mr-2"></i>
+                <h3 class="font-semibold">Dislipemias</h3>
+            </div>
+            <p id="dislipemia-value" class="text-2xl font-bold">--</p>
+            <p id="dislipemia-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+    </div>
+    
+    <!-- Factores Secundarios (3 columnas) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <!-- Tabaquismo -->
+        <div id="tabaquismo-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-smoking mr-2"></i>
+                <h3 class="font-semibold">Tabaquismo</h3>
+            </div>
+            <p id="tabaquismo-value" class="text-xl font-bold">--</p>
+            <p id="tabaquismo-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- Edad -->
+        <div id="edad-card" class="p-4 rounded-lg bg-blue-50">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-birthday-cake text-blue-500 mr-2"></i>
+                <h3 class="font-semibold">Edad</h3>
+            </div>
+            <p id="edad-value" class="text-xl font-bold">--</p>
+        </div>
+        
+        <!-- Sexo -->
+        <div id="sexo-card" class="p-4 rounded-lg bg-blue-50">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-venus-mars text-blue-500 mr-2"></i>
+                <h3 class="font-semibold">Sexo</h3>
+            </div>
+            <p id="sexo-value" class="text-xl font-bold">--</p>
+        </div>
+    </div>
+    
+    <!-- Resultado Final -->
+    <div id="risk-card" class="p-6 rounded-lg">
+        <h3 class="font-semibold text-lg mb-3 flex items-center">
+            <i class="fas fa-exclamation-triangle mr-2"></i> Evaluación Final de Riesgo
+        </h3>
+        <div class="flex items-center mb-3">
+            <span id="risk-level" class="text-2xl font-bold mr-3">--</span>
+            <span id="risk-percentage" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+        </div>
+        <div id="risk-description" class="bg-white bg-opacity-50 p-4 rounded-lg">
+            <p id="risk-score" class="font-medium mb-2"></p>
+            <p id="risk-recommendation"></p>
+        </div>
+    </div>
+    
+    <!-- Plan de Acción -->
+    <div class="mt-6 bg-blue-50 p-4 rounded-lg">
+        <h4 class="font-semibold mb-2 text-blue-800">Plan de Acción Personalizado</h4>
+        <ul id="action-plan" class="list-disc pl-5 space-y-1">
+            <!-- Se llenará dinámicamente -->
+        </ul>
+    </div>
+</div>
+<!-- Cancer Prevention Section -->
+<div class="bg-white rounded-xl shadow-md p-6" id="cancer-prevention">
+    <h2 class="text-xl font-bold mb-4">Prevención del Cáncer</h2>
+    
+    <!-- Exámenes de Prevención -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <!-- Cáncer Cérvico-uterino (HPV) -->
+        <div id="hpv-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-female mr-2"></i>
+                <h3 class="font-semibold">HPV (VPH)</h3>
+            </div>
+            <p id="hpv-value" class="text-2xl font-bold">--</p>
+            <p id="hpv-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- Cáncer Cérvico-uterino (PAP) -->
+        <div id="pap-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-microscope mr-2"></i>
+                <h3 class="font-semibold">PAP</h3>
+            </div>
+            <p id="pap-value" class="text-2xl font-bold">--</p>
+            <p id="pap-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- Cáncer de Colon (SOMF) -->
+        <div id="somf-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-poop mr-2"></i>
+                <h3 class="font-semibold">SOMF</h3>
+            </div>
+            <p id="somf-value" class="text-2xl font-bold">--</p>
+            <p id="somf-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- Cáncer de Colon (Colonoscopia) -->
+        <div id="colonoscopia-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-procedures mr-2"></i>
+                <h3 class="font-semibold">Colonoscopia</h3>
+            </div>
+            <p id="colonoscopia-value" class="text-2xl font-bold">--</p>
+            <p id="colonoscopia-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <!-- Cáncer de Mama (Mamografía) -->
+        <div id="mamografia-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-breastfeeding mr-2"></i>
+                <h3 class="font-semibold">Mamografía</h3>
+            </div>
+            <p id="mamografia-value" class="text-2xl font-bold">--</p>
+            <p id="mamografia-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- Próstata (PSA) -->
+        <div id="psa-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-male mr-2"></i>
+                <h3 class="font-semibold">PSA (Próstata)</h3>
+            </div>
+            <p id="psa-value" class="text-2xl font-bold">--</p>
+            <p id="psa-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+    </div>
+    
+    <!-- Recomendaciones -->
+    <div class="mt-6 bg-blue-50 p-4 rounded-lg">
+        <h4 class="font-semibold mb-2 text-blue-800">Recomendaciones</h4>
+        <ul id="cancer-recommendations" class="list-disc pl-5 space-y-1">
+            <!-- Se llenará dinámicamente -->
+        </ul>
+    </div>
+</div>
+<!-- Infectious Diseases Prevention Section -->
+<div class="bg-white rounded-xl shadow-md p-6" id="infectious-diseases">
+    <h2 class="text-xl font-bold mb-4">Prevención de Enfermedades Infecciosas</h2>
+    
+    <!-- Exámenes de Prevención -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <!-- ITS -->
+        <div id="its-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-bacteria mr-2"></i>
+                <h3 class="font-semibold">Infecciones de Transmisión Sexual</h3>
+            </div>
+            <p id="its-value" class="text-2xl font-bold">--</p>
+            <p id="its-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- Hepatitis B -->
+        <div id="hepatitis-b-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-liver mr-2"></i>
+                <h3 class="font-semibold">Hepatitis B</h3>
+            </div>
+            <p id="hepatitis-b-value" class="text-2xl font-bold">--</p>
+            <p id="hepatitis-b-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- Hepatitis C -->
+        <div id="hepatitis-c-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-liver mr-2"></i>
+                <h3 class="font-semibold">Hepatitis C</h3>
+            </div>
+            <p id="hepatitis-c-value" class="text-2xl font-bold">--</p>
+            <p id="hepatitis-c-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- VIH -->
+        <div id="vih-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-virus mr-2"></i>
+                <h3 class="font-semibold">VIH</h3>
+            </div>
+            <p id="vih-value" class="text-2xl font-bold">--</p>
+            <p id="vih-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- VDRL -->
+        <div id="vdrl-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-microscope mr-2"></i>
+                <h3 class="font-semibold">VDRL (Sífilis)</h3>
+            </div>
+            <p id="vdrl-value" class="text-2xl font-bold">--</p>
+            <p id="vdrl-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- Chagas -->
+        <div id="chagas-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-bug mr-2"></i>
+                <h3 class="font-semibold">Chagas</h3>
+            </div>
+            <p id="chagas-value" class="text-2xl font-bold">--</p>
+            <p id="chagas-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+    </div>
+    
+    <!-- Recomendaciones -->
+    <div class="mt-6 bg-blue-50 p-4 rounded-lg">
+        <h4 class="font-semibold mb-2 text-blue-800">Recomendaciones</h4>
+        <ul id="infectious-recommendations" class="list-disc pl-5 space-y-1">
+            <!-- Se llenará dinámicamente -->
+        </ul>
+    </div>
+</div>
+
+<!-- Healthy Habits Section -->
+<div class="bg-white rounded-xl shadow-md p-6" id="healthy-habits">
+    <h2 class="text-xl font-bold mb-4">Hábitos Saludables</h2>
+    
+    <!-- Hábitos -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <!-- Alimentación saludable -->
+        <div id="alimentacion-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-apple-alt mr-2"></i>
+                <h3 class="font-semibold">Alimentación Saludable</h3>
+            </div>
+            <p id="alimentacion-value" class="text-2xl font-bold">--</p>
+            <p id="alimentacion-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- Actividad física -->
+        <div id="actividad-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-running mr-2"></i>
+                <h3 class="font-semibold">Actividad Física</h3>
+            </div>
+            <p id="actividad-value" class="text-2xl font-bold">--</p>
+            <p id="actividad-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- Seguridad vial -->
+        <div id="seguridad-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-car mr-2"></i>
+                <h3 class="font-semibold">Seguridad Vial</h3>
+            </div>
+            <p id="seguridad-value" class="text-2xl font-bold">--</p>
+            <p id="seguridad-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- Caídas en adultos mayores -->
+        <div id="caidas-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-wheelchair mr-2"></i>
+                <h3 class="font-semibold">Prevención de Caídas</h3>
+            </div>
+            <p id="caidas-value" class="text-2xl font-bold">--</p>
+            <p id="caidas-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- Abuso de alcohol -->
+        <div id="alcohol-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-wine-glass-alt mr-2"></i>
+                <h3 class="font-semibold">Consumo de Alcohol</h3>
+            </div>
+            <p id="alcohol-value" class="text-2xl font-bold">--</p>
+            <p id="alcohol-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- Tabaco -->
+        <div id="tabaco-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-smoking mr-2"></i>
+                <h3 class="font-semibold">Consumo de Tabaco</h3>
+            </div>
+            <p id="tabaco-value" class="text-2xl font-bold">--</p>
+            <p id="tabaco-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+        
+        <!-- Ácido fólico -->
+        <div id="acido-card" class="p-4 rounded-lg">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-pills mr-2"></i>
+                <h3 class="font-semibold">Ácido Fólico</h3>
+            </div>
+            <p id="acido-value" class="text-2xl font-bold">--</p>
+            <p id="acido-notes" class="text-sm mt-2 text-gray-600"></p>
+        </div>
+    </div>
+    
+    <!-- Recomendaciones -->
+    <div class="mt-6 bg-blue-50 p-4 rounded-lg">
+        <h4 class="font-semibold mb-2 text-blue-800">Recomendaciones Personalizadas</h4>
+        <ul id="habits-recommendations" class="list-disc pl-5 space-y-1">
+            <!-- Se llenará dinámicamente -->
+        </ul>
+    </div>
+</div>
+<!-- Sección de Módulos Especializados -->
+<div class="container mx-auto px-4 py-6">
+    <!-- Primera fila de 4 módulos -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Salud Bucal -->
+        <div class="bg-white rounded-xl shadow-md p-6" id="dental-health">
+            <h2 class="text-xl font-bold mb-4">Salud Bucal</h2>
+            <div id="odontologico-card" class="p-4 rounded-lg mb-4">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-tooth mr-2"></i>
+                    <h3 class="font-semibold">Control Odontológico</h3>
+                </div>
+                <p id="odontologico-value" class="text-2xl font-bold">--</p>
+                <p id="odontologico-notes" class="text-sm mt-2 text-gray-600"></p>
+            </div>
+            <div class="mt-4 bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-semibold mb-2 text-blue-800">Recomendaciones</h4>
+                <ul id="dental-recommendations" class="list-disc pl-5 space-y-1">
+                    <!-- Se llenará dinámicamente -->
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Salud Mental -->
+        <div class="bg-white rounded-xl shadow-md p-6" id="mental-health">
+            <h2 class="text-xl font-bold mb-4">Salud Mental</h2>
+            <div id="depresion-card" class="p-4 rounded-lg mb-4">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-brain mr-2"></i>
+                    <h3 class="font-semibold">Depresión</h3>
+                </div>
+                <p id="depresion-value" class="text-2xl font-bold">--</p>
+                <p id="depresion-notes" class="text-sm mt-2 text-gray-600"></p>
+            </div>
+            <div id="violencia-card" class="p-4 rounded-lg mb-4">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-hand-paper mr-2"></i>
+                    <h3 class="font-semibold">Violencia</h3>
+                </div>
+                <p id="violencia-value" class="text-2xl font-bold">--</p>
+                <p id="violencia-notes" class="text-sm mt-2 text-gray-600"></p>
+            </div>
+            <div class="mt-4 bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-semibold mb-2 text-blue-800">Recomendaciones</h4>
+                <ul id="mental-recommendations" class="list-disc pl-5 space-y-1">
+                    <!-- Se llenará dinámicamente -->
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Salud Renal -->
+        <div class="bg-white rounded-xl shadow-md p-6" id="renal-health">
+            <h2 class="text-xl font-bold mb-4">Salud Renal</h2>
+            <div id="erc-card" class="p-4 rounded-lg mb-4">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-kidneys mr-2"></i>
+                    <h3 class="font-semibold">Enfermedad Renal Crónica</h3>
+                </div>
+                <p id="erc-value" class="text-2xl font-bold">--</p>
+                <p id="erc-notes" class="text-sm mt-2 text-gray-600"></p>
+            </div>
+            <div class="mt-4 bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-semibold mb-2 text-blue-800">Recomendaciones</h4>
+                <ul id="renal-recommendations" class="list-disc pl-5 space-y-1">
+                    <!-- Se llenará dinámicamente -->
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Agudeza Visual -->
+        <div class="bg-white rounded-xl shadow-md p-6" id="visual-health">
+            <h2 class="text-xl font-bold mb-4">Agudeza Visual</h2>
+            <div id="agudeza-card" class="p-4 rounded-lg mb-4">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-eye mr-2"></i>
+                    <h3 class="font-semibold">Evaluación Agudeza Visual</h3>
+                </div>
+                <p id="agudeza-value" class="text-2xl font-bold">--</p>
+                <p id="agudeza-notes" class="text-sm mt-2 text-gray-600"></p>
+            </div>
+            <div class="mt-4 bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-semibold mb-2 text-blue-800">Recomendaciones</h4>
+                <ul id="visual-recommendations" class="list-disc pl-5 space-y-1">
+                    <!-- Se llenará dinámicamente -->
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Segunda fila de 4 módulos -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+        <!-- EPOC -->
+        <div class="bg-white rounded-xl shadow-md p-6" id="epoc-section">
+            <h2 class="text-xl font-bold mb-4">EPOC</h2>
+            <div id="epoc-card" class="p-4 rounded-lg mb-4">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-lungs mr-2"></i>
+                    <h3 class="font-semibold">Evaluación EPOC</h3>
+                </div>
+                <p id="epoc-value" class="text-2xl font-bold">--</p>
+                <p id="epoc-notes" class="text-sm mt-2 text-gray-600"></p>
+            </div>
+            <div class="mt-4 bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-semibold mb-2 text-blue-800">Recomendaciones</h4>
+                <ul id="epoc-recommendations" class="list-disc pl-5 space-y-1">
+                    <!-- Se llenará dinámicamente -->
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Aneurisma de Aorta -->
+        <div class="bg-white rounded-xl shadow-md p-6" id="aneurisma-section">
+            <h2 class="text-xl font-bold mb-4">Aneurisma Aorta</h2>
+            <div id="aneurisma-card" class="p-4 rounded-lg mb-4">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-heartbeat mr-2"></i>
+                    <h3 class="font-semibold">Evaluación Aneurisma</h3>
+                </div>
+                <p id="aneurisma-value" class="text-2xl font-bold">--</p>
+                <p id="aneurisma-notes" class="text-sm mt-2 text-gray-600"></p>
+            </div>
+            <div class="mt-4 bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-semibold mb-2 text-blue-800">Recomendaciones</h4>
+                <ul id="aneurisma-recommendations" class="list-disc pl-5 space-y-1">
+                    <!-- Se llenará dinámicamente -->
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Osteoporosis -->
+        <div class="bg-white rounded-xl shadow-md p-6" id="osteoporosis-section">
+            <h2 class="text-xl font-bold mb-4">Osteoporosis</h2>
+            <div id="osteoporosis-card" class="p-4 rounded-lg mb-4">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-bone mr-2"></i>
+                    <h3 class="font-semibold">Evaluación Osteoporosis</h3>
+                </div>
+                <p id="osteoporosis-value" class="text-2xl font-bold">--</p>
+                <p id="osteoporosis-notes" class="text-sm mt-2 text-gray-600"></p>
+            </div>
+            <div class="mt-4 bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-semibold mb-2 text-blue-800">Recomendaciones</h4>
+                <ul id="osteoporosis-recommendations" class="list-disc pl-5 space-y-1">
+                    <!-- Se llenará dinámicamente -->
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Aspirina -->
+        <div class="bg-white rounded-xl shadow-md p-6" id="aspirina-section">
+            <h2 class="text-xl font-bold mb-4">Aspirina</h2>
+            <div id="aspirina-card" class="p-4 rounded-lg mb-4">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-pills mr-2"></i>
+                    <h3 class="font-semibold">Indicación Aspirina</h3>
+                </div>
+                <p id="aspirina-value" class="text-2xl font-bold">--</p>
+                <p id="aspirina-notes" class="text-sm mt-2 text-gray-600"></p>
+            </div>
+            <div class="mt-4 bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-semibold mb-2 text-blue-800">Recomendaciones</h4>
+                <ul id="aspirina-recommendations" class="list-disc pl-5 space-y-1">
+                    <!-- Se llenará dinámicamente -->
+                </ul>
+            </div>
+        </div>
+    <div id="main-content">
+        <div id="estudios-complementarios-seccion" class="mt-8 p-4 bg-blue-50 rounded-lg shadow-inner hidden">
+            <h3 class="text-xl font-bold text-primary mb-4">Estudios Complementarios</h3>
+            <button id="ver-estudios-btn" class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4">
+                Ver Estudios <i class="fas fa-microscope ml-2"></i> 
+            </button>
+            <div id="resultados-estudios-paciente">
+                </div>
+        </div>
+    </div>
+    
+    <div id="lab-results-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl mx-auto">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">Resultados de Laboratorio Detallados</h2>
+                <button id="close-lab-results-modal" class="text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+            </div>
+            <div id="lab-results-modal-content" class="max-h-96 overflow-y-auto">
+                </div>
+        </div>
+    </div>
+    <div id="enfermeria-results-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl mx-auto">
+        <div class="flex justify-between items-center border-b pb-3 mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">Resultados de Enfermería</h2>
+            <button id="close-enfermeria-results-modal" class="text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+        </div>
+        <div id="enfermeria-results-modal-content" class="max-h-96 overflow-y-auto">
+            </div>
+        </div>
+    </div>
+
+
+    <p>
+        <a href="/politica-de-privacidad.html">Política de Privacidad</a> |
+        <a href="/terminos-de-servicio.html">Términos del Servicio</a>
+    </p>
+
+    <script src="app.js?v=2.0"></script>
+</body>
+</html>

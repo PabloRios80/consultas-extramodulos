@@ -1,0 +1,243 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f8fafc;
+}
+
+.risk-high {
+    background-color: #fee2e2;
+    border-left: 4px solid #ef4444;
+}
+
+.risk-medium {
+    background-color: #fef3c7;
+    border-left: 4px solid #f59e0b;
+}
+
+.risk-low {
+    background-color: #dcfce7;
+    border-left: 4px solid #22c55e;
+}
+
+/* Agregar al estilo existente */
+#risk-card {
+    transition: all 0.3s ease;
+}
+
+.risk-high #risk-level {
+    color: #dc2626;
+}
+
+.risk-medium #risk-level {
+    color: #d97706;
+}
+
+.risk-low #risk-level {
+    color: #16a34a;
+}
+
+#risk-percentage {
+    background-color: #e5e7eb;
+}
+
+.risk-high #risk-percentage {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.risk-medium #risk-percentage {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.risk-low #risk-percentage {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.action-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.action-item i {
+    margin-right: 0.5rem;
+}
+
+/* Agrega esto en el <style> del head */
+.fa-bacteria:before { content: "\f959"; }
+.fa-liver:before { content: "\f21e"; }
+.fa-virus:before { content: "\f974"; }
+.fa-bug:before { content: "\f188"; }
+
+/* Asegura que todos los módulos tengan la misma altura */
+.bg-white.rounded-xl {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Hace que la sección de recomendaciones se pegue al fondo */
+.bg-blue-50.rounded-lg {
+    margin-top: auto;
+}
+
+/* Ajusta el espaciado interno para consistencia */
+.p-6 {
+    padding: 1.5rem;
+}
+
+/* ============================================== */
+/* NUEVOS ESTILOS PARA LA TABLA DE ESTUDIOS COMPLEMENTARIOS */
+/* ============================================== */
+
+/* Contenedor general de la tabla de estudios */
+.estudios-complementarios-container {
+    background-color: #f0f8ff; /* Un azul muy claro para el fondo del contenedor */
+    border: 1px solid #cceeff; /* Un borde sutil */
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 51, 102, 0.1), 0 2px 4px -1px rgba(0, 51, 102, 0.06); /* Sombra con el color primario */
+}
+
+.estudios-complementarios-container h4 {
+    color: #003366; /* Color primario para el título de la tabla */
+    margin-bottom: 1rem;
+}
+
+.resultados-estudios-paciente p {
+    color: #667788; /* Color de texto para mensajes como "No se encontraron estudios" */
+}
+
+/* Estilos de la tabla principal de resultados */
+.resultados-table {
+    width: 100%;
+    border-collapse: collapse; /* Para que los bordes de las celdas se fusionen */
+    margin-bottom: 1rem;
+    overflow: hidden; /* Para que el border-radius se aplique bien */
+    border-radius: 0.5rem; /* Borde redondeado para la tabla */
+}
+
+.resultados-table thead {
+    background-color: #003366; /* Color primario para el fondo del encabezado */
+    color: white;
+}
+
+.resultados-table th,
+.resultados-table td {
+    padding: 0.75rem 1rem; /* Más padding para que se vea más limpio */
+    border: 1px solid #004d99; /* Un azul un poco más oscuro para los bordes de las celdas */
+    text-align: left; /* Alineado a la izquierda por defecto */
+}
+
+.resultados-table th {
+    font-weight: 600; /* Un poco más de peso para los encabezados */
+    text-transform: uppercase; /* Mayúsculas para los encabezados */
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+}
+
+.resultados-table tbody tr:nth-child(even) {
+    background-color: #f2f7fc; /* Alternar colores de fila para mejor legibilidad */
+}
+
+.resultados-table tbody tr:hover {
+    background-color: #e6f2ff; /* Resaltar fila al pasar el mouse */
+}
+
+/* Estilos específicos para la celda de "Informe/PDF" */
+.resultados-table td.text-center { /* Usamos la clase que ya enviamos en app.js */
+    text-align: center;
+}
+
+.resultados-table td a {
+    color: #007bff; /* Un azul estándar para los enlaces */
+    text-decoration: none; /* Quitar subrayado por defecto */
+    font-weight: 500;
+}
+
+.resultados-table td a:hover {
+    text-decoration: underline; /* Subrayar al pasar el mouse */
+    color: #0056b3; /* Un azul más oscuro al pasar el mouse */
+}
+
+.resultados-table td .fa-external-link-alt {
+    font-size: 0.8em; /* Tamaño del icono */
+    vertical-align: middle; /* Alineación del icono */
+}
+
+/* Estilos para la lista interna de resultados de laboratorio */
+.resultados-table ul {
+    list-style: none; /* Quita los puntos de la lista por defecto */
+    padding: 0;
+    margin: 0;
+}
+
+.resultados-table ul li {
+    padding: 0.2rem 0;
+    border-bottom: 1px dashed #e0e0e0; /* Línea discontinua entre elementos de la lista */
+    font-size: 0.85rem;
+    color: #334455;
+}
+
+.resultados-table ul li:last-child {
+    border-bottom: none; /* Quita el borde inferior del último elemento */
+}
+
+.resultados-table ul li strong {
+    color: #003366; /* Color primario para los nombres de los campos de laboratorio */
+}
+
+/* Estilo para el mensaje 'No disponible' */
+.resultados-table td .text-gray-500 {
+    color: #8899aa; /* Un gris más suave para 'No disponible' */
+    font-style: italic;
+    font-size: 0.85rem;
+}
+
+/* Oculta la sección de información del afiliado por defecto */
+#afiliado-details {
+    display: none;
+}
+
+/* Esta ya la tenías, la mantenemos */
+#risk-assessment {
+    display: none;
+}
+
+/* Oculta las secciones de detalles de cada prevención por defecto */
+#cancer-prevention {
+    display: none;
+}
+
+#infectious-diseases{
+    display: none;
+}
+
+#healthy-habits {
+    display: none;
+}
+
+#dental-health { display: none; } 
+
+#mental-health { display: none; } 
+#renal-health { display: none; } 
+#epoc-section { display: none; } 
+#aneurisma-section { display: none; }
+#osteoporosis-section { display: none; } 
+#aspirina-section { display: none; } 
+#visual-health { display: none; }
+
+/* Asegúrate de que estas también estén ocultas por defecto si no quieres que se vean */
+#estudios-complementarios-section {
+    display: none;
+}
+
+#previous-studies-message {
+    display: none;
+}
+

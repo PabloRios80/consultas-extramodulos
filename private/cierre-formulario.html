@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Cierre de Módulo</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+
+    <header class="bg-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-blue-500 rounded-full p-2">
+                        <img src="images/logo_iapos.png" alt="Logo IAPOS" class="h-20"> 
+                    </div>
+                    <h1 class="text-xl font-bold">Formulario de Cierre de Módulo</h1>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center py-8">
+        <div class="container mx-auto p-6 bg-white rounded-xl shadow-lg max-w-4xl border border-blue-200">
+            <h2 class="text-2xl font-bold text-blue-800 mb-6 text-center">Datos del Paciente</h2>
+
+            <div class="mb-6 pb-4 border-b border-gray-200">
+                <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                    <div class="w-full sm:w-2/3">
+                        <label for="paciente-dni" class="sr-only">DNI del Paciente</label>
+                        <input type="text" id="paciente-dni" autocomplete="off" required
+                            class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            placeholder="Ingrese DNI del paciente" pattern="[0-9]*" title="Ingrese solo números">
+                    </div>
+                    <button type="button" id="cargar-datos-btn" disabled
+                        class="group relative w-full sm:w-1/3 flex justify-center items-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        <i class="fas fa-search mr-2"></i>Cargar Datos
+                    </button>
+                </div>
+            </div>
+
+            <div id="patient-info-display" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 hidden">
+                <div>
+                    <label for="paciente-apellido" class="block text-gray-700 text-sm font-bold mb-2">Apellido:</label>
+                    <input type="text" id="paciente-apellido" name="Apellido" autocomplete="off" readonly
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100">
+                </div>
+                <div>
+                    <label for="paciente-nombre" class="block text-gray-700 text-sm font-bold mb-2">Nombre:</label>
+                    <input type="text" id="paciente-nombre" name="Nombre" autocomplete="off" readonly
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100">
+                </div>
+                <div>
+                    <label for="paciente-edad" class="block text-gray-700 text-sm font-bold mb-2">Edad:</label>
+                    <input type="number" id="paciente-edad" name="Edad" autocomplete="off" readonly
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100">
+                </div>
+                <div>
+                    <label for="paciente-sexo" class="block text-gray-700 text-sm font-bold mb-2">Sexo:</label>
+                    <select id="paciente-sexo" name="Sexo" disabled
+                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md bg-gray-100">
+                        <option value="">Seleccione</option>
+                        <option value="F">Femenino</option>
+                        <option value="M">Masculino</option>
+                    </select>
+                </div>
+            </div>
+
+            <form id="cierre-form" class="mt-8 hidden">
+                <div class="w-full bg-blue-100 rounded-full h-2.5 mb-8">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-in-out" style="width: 0%;"></div>
+                </div>
+
+                <div id="form-steps-container">
+                    </div>
+
+                <div class="mt-8 flex justify-between">
+                    <button type="button" id="prev-step-btn"
+                        class="inline-flex justify-center items-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-150 ease-in-out">
+                        <i class="fas fa-arrow-left mr-2"></i>Anterior
+                    </button>
+                    <button type="button" id="next-step-btn"
+                        class="inline-flex justify-center items-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Siguiente<i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                    <button type="submit" id="guardar-cierre-btn"
+                        class="inline-flex justify-center items-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out hidden">
+                        <i class="fas fa-save mr-2"></i>Guardar Cierre
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-6 text-center">
+                <button type="button" id="cancelar-cierre-btn"
+                    class="text-red-600 hover:text-red-800 text-sm font-medium">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </main>
+    <div id="estudiosModal" class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-xl font-bold text-blue-800">Estudios Complementarios - <span id="modalDNI"></span></h3>
+                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">&times;</button>
+            </div>
+        <div id="estudiosModalContent" class="space-y-4 text-gray-700 max-h-[60vh] overflow-y-auto">
+            </div>
+        <div class="mt-6 text-right">
+            <button id="modalCloseButtonBottom" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
+    <script src="cierre-formulario.js"></script>
+</body>
+</html>
