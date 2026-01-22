@@ -134,6 +134,99 @@ async function getDataFromSpecificSheet(sheetIdentifier) {
     });
 }
 
+/**
+ * LÓGICA DE BÚSQUEDA Y AUTOCOMPLETADO
+ * Busca al paciente por DNI y llena el formulario automáticamente.
+ */
+async function buscarPaciente() {
+    const dniInput = document.getElementById('dni-busqueda');
+    const dni = dniInput.value.trim();
+
+    if (!dni) {
+        mostrarMensaje('Por favor, ingrese un DNI', 'error');
+        return;
+    }
+
+    try {
+        // Mostrar estado de carga (opcional)
+        dniInput.classList.add('loading');
+
+        const response = await fetch('/buscar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dni })
+        });
+
+        const data = await response.json();
+
+        if (data.pacientePrincipal) {
+            const p = data.pacientePrincipal;
+            
+            // AUTOCOMPLETADO DE CAMPOS
+            // Buscamos los elementos por sus IDs y asignamos el valor
+            if (document.getElementById('paciente-nombre')) {
+                document.getElementById('paciente-nombre').value = p.Nombre || '';
+            }
+            if (document.getElementById('paciente-apellido')) {
+                document.getElementById('paciente-apellido').value = p.Apellido || '';
+            }
+            if (document.getElementById('paciente-edad')) {
+                document.getElementById('paciente-edad').value = p.Edad || '';
+            }
+            if (document.getElementById('paciente-sexo')) {
+                document.getElementById('paciente-sexo').value = p.Sexo || '';
+            }
+
+            // Opcional: Bloquear campos para que no se editen si vienen de la base
+            // bloquearCampos(true);
+
+            mostrarMensaje('Paciente encontrado y datos cargados', 'success');
+            
+            // Si tienes una función para buscar estudios adicionales, la disparas aquí
+            if (typeof obtenerEstudios === 'function') {
+                obtenerEstudios(dni);
+            }
+
+        } else if (data.error) {
+            mostrarMensaje('Paciente no encontrado en la base de datos', 'warning');
+            limpiarFormularioPaciente();
+        }
+    } catch (error) {
+        console.error('Error en la búsqueda:', error);
+        mostrarMensaje('Error de conexión con el servidor', 'error');
+    } finally {
+        dniInput.classList.remove('loading');
+    }
+}
+
+/**
+ * Limpia los campos si el paciente no existe para permitir carga manual
+ */
+function limpiarFormularioPaciente() {
+    const campos = ['paciente-nombre', 'paciente-apellido', 'paciente-edad', 'paciente-sexo'];
+    campos.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+}
+
+/**
+ * Función auxiliar para mensajes visuales (sin usar alert)
+ */
+function mostrarMensaje(texto, tipo) {
+    const toast = document.getElementById('toast-mensaje');
+    if (!toast) return;
+    
+    toast.textContent = texto;
+    toast.className = `fixed bottom-5 right-5 p-4 rounded shadow-lg text-white transition-all ${
+        tipo === 'success' ? 'bg-green-500' : tipo === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
+    }`;
+    
+    setTimeout(() => {
+        toast.classList.add('opacity-0');
+    }, 3000);
+}
+
 app.post('/buscar', async (req, res) => {
     try {
         const dniABuscar = String(req.body.dni).trim();

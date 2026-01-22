@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pacienteNombre) pacienteNombre.value = '';
         if (pacienteEdad) pacienteEdad.value = '';
         if (pacienteSexo) pacienteSexo.value = '';
-        if (patientDetails) patientDetails.classList.add('hidden');
         if (patientNotFound) patientNotFound.classList.add('hidden');
         if (estudiosContainer) estudiosContainer.innerHTML = '';
         if (verEstudiosBtn) verEstudiosBtn.classList.add('hidden');
@@ -59,24 +58,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentUserEmail = data.user.email;
                 if (authContainer) authContainer.classList.add('hidden');
                 if (mainContainer) mainContainer.classList.remove('hidden');
-                if (authStatus) authStatus.textContent = `Usuario autenticado: ${data.user.name} ${data.user.email}`;
-                console.log('Usuario autenticado:', data.user.name, data.user.email);
+                if (authStatus) authStatus.textContent = `Usuario: ${data.user.name}`;
             } else {
-                if (authContainer) authContainer.classList.remove('hidden');
                 if (mainContainer) mainContainer.classList.add('hidden');
-                if (authStatus) authStatus.textContent = 'Por favor, inicia sesión con tu cuenta de Google.';
-                console.warn('Usuario no autenticado.');
             }
         } catch (error) {
             console.error('Error al verificar autenticación:', error);
-            if (authContainer) authContainer.classList.remove('hidden');
-            if (mainContainer) mainContainer.classList.add('hidden');
-            if (authStatus) authStatus.textContent = 'Error de conexión. Intente de nuevo.';
         }
     }
     checkAuthStatus();
 
-    // --- Lógica de Búsqueda de Paciente ---
+    // --- Lógica de Búsqueda de Paciente (CORREGIDA) ---
     if (searchPatientBtn) {
         searchPatientBtn.addEventListener('click', async () => {
             const dni = dniInput.value.trim();
@@ -84,9 +76,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Por favor ingrese un DNI.');
                 return;
             }
-// Limpia y asegura que los campos de paciente estén visibles
-            if (patientDetails) patientDetails.classList.remove('hidden');
+
+            // Reset visual
             clearPatientInfo();
+            searchPatientBtn.disabled = true;
+            searchPatientBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Buscando...';
 
             try {
                 const response = await fetch('/buscar', {
@@ -95,31 +89,36 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ dni })
                 });
 
-                if (!response.ok) {
-                    console.error(`Error del servidor: ${response.status} ${response.statusText}`);
-                    const errorData = await response.json();
-                    console.error('Detalles del error:', errorData);
-                    alert(`Error al buscar paciente: ${errorData.message || 'Verifique el DNI y la conexión.'}`);
-                    return;
-                }
-
                 const data = await response.json();
 
-                if (data.error) {
+                if (data.pacientePrincipal) {
+                    const p = data.pacientePrincipal;
+                    
+                    // AUTOCOMPLETADO DE CAMPOS
+                    if (pacienteApellido) pacienteApellido.value = p.Apellido || '';
+                    if (pacienteNombre) pacienteNombre.value = p.Nombre || '';
+                    if (pacienteEdad) pacienteEdad.value = p.Edad || '';
+                    if (pacienteSexo) pacienteSexo.value = p.Sexo || '';
+
+                    // Actualizar estado global
+                    currentPatientDNI = p.DNI || p.Documento || dni;
+                    currentPatientData = p;
+
+                    // Mostrar botones de acción
+                    if (verEstudiosBtn) verEstudiosBtn.classList.remove('hidden');
+                    if (patientNotFound) patientNotFound.classList.add('hidden');
+                    
+                } else {
                     if (patientNotFound) patientNotFound.classList.remove('hidden');
-                    console.log('Paciente no encontrado:', data.error);
                     currentPatientDNI = null;
                     currentPatientData = null;
-                } else if (data.pacientePrincipal) {
-                    if (patientNotFound) patientNotFound.classList.add('hidden');
-                    currentPatientDNI = data.pacientePrincipal.DNI || data.pacientePrincipal.Documento;
-                    currentPatientData = data.pacientePrincipal;
-                    if (verEstudiosBtn) verEstudiosBtn.classList.remove('hidden');
-                    console.log('Paciente encontrado:', currentPatientData);
                 }
             } catch (error) {
                 console.error('Error al buscar paciente:', error);
-                if (patientNotFound) patientNotFound.classList.remove('hidden');
+                alert('Error al conectar con el servidor.');
+            } finally {
+                searchPatientBtn.disabled = false;
+                searchPatientBtn.innerHTML = '<i class="fas fa-search mr-2"></i>Buscar';
             }
         });
     }
@@ -131,8 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Primero debe buscar un paciente.');
                 return;
             }
-            if (estudiosContainer) estudiosContainer.innerHTML = '<p class="text-gray-600"><i class="fas fa-spinner fa-spin"></i> Cargando estudios...</p>';
-            if (verEstudiosBtn) verEstudiosBtn.disabled = true;
+            if (estudiosContainer) estudiosContainer.innerHTML = '<p class="text-gray-600 p-4"><i class="fas fa-spinner fa-spin mr-2"></i> Cargando estudios...</p>';
 
             try {
                 const response = await fetch('/obtener-estudios-paciente', {
@@ -144,178 +142,118 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (result.success && result.estudios && result.estudios.length > 0) {
                     allFetchedStudies = result.estudios;
-                    let estudiosHtml = `<h4 class="text-lg font-semibold text-gray-700 mb-4">Estudios Encontrados</h4>`;
-                    estudiosHtml += `<table class="min-w-full divide-y divide-gray-200">
-                        <thead>
-                            <tr>
-                                <th class="py-2 px-4 text-left">Tipo</th>
-                                <th class="py-2 px-4 text-left">Fecha</th>
-                                <th class="py-2 px-4 text-center">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">`;
+                    let estudiosHtml = `<div class="overflow-x-auto mt-4"><table class="min-w-full bg-white border">
+                        <thead><tr class="bg-gray-50">
+                            <th class="py-2 px-4 border-b text-left">Tipo</th>
+                            <th class="py-2 px-4 border-b text-left">Fecha</th>
+                            <th class="py-2 px-4 border-b text-center">Acción</th>
+                        </tr></thead><tbody>`;
+                    
                     result.estudios.forEach((estudio, index) => {
                         estudiosHtml += `<tr>
-                            <td class="py-2 px-4">${estudio.TipoEstudio || 'N/A'}</td>
-                            <td class="py-2 px-4">${estudio.Fecha || 'N/A'}</td>
-                            <td class="py-2 px-4 text-center">
-                                <button type="button" class="view-study-btn bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm" data-index="${index}">
+                            <td class="py-2 px-4 border-b">${estudio.TipoEstudio || 'N/A'}</td>
+                            <td class="py-2 px-4 border-b">${estudio.Fecha || 'N/A'}</td>
+                            <td class="py-2 px-4 border-b text-center">
+                                <button type="button" class="view-study-btn bg-purple-100 text-purple-700 hover:bg-purple-200 font-bold py-1 px-3 rounded text-xs" data-index="${index}">
                                     Ver Resultados
                                 </button>
                             </td>
                         </tr>`;
                     });
-                    estudiosHtml += `</tbody></table>`;
+                    estudiosHtml += `</tbody></table></div>`;
                     if (estudiosContainer) estudiosContainer.innerHTML = estudiosHtml;
-                    
                 } else {
-                    if (estudiosContainer) estudiosContainer.innerHTML = `<p class="text-gray-600">No se encontraron estudios para este paciente.</p>`;
+                    if (estudiosContainer) estudiosContainer.innerHTML = `<p class="text-gray-500 italic p-4">No se encontraron estudios previos.</p>`;
                 }
             } catch (error) {
-                console.error('Error al buscar estudios:', error);
                 if (estudiosContainer) estudiosContainer.innerHTML = '<p class="text-red-500">Error al cargar estudios.</p>';
-            } finally {
-                if (verEstudiosBtn) verEstudiosBtn.disabled = false;
             }
         });
     }
 
-    // Lógica para mostrar los resultados de un estudio en el modal
+    // Delegación de eventos para botones "Ver Resultados" en la tabla
     if (estudiosContainer) {
         estudiosContainer.addEventListener('click', (event) => {
             const viewBtn = event.target.closest('.view-study-btn');
             if (viewBtn) {
                 const index = parseInt(viewBtn.dataset.index, 10);
-                if (!isNaN(index) && allFetchedStudies[index]) {
-                    const study = allFetchedStudies[index];
-                    let modalHtml = `<h3 class="text-xl font-semibold mb-4">${study.TipoEstudio || 'Estudio'} - ${study.Fecha || 'N/A'}</h3>`;
-                    modalHtml += `<table class="min-w-full bg-white border border-gray-300">
-                        <thead><tr class="bg-gray-100"><th class="py-2 px-4 border-b">Campo</th><th class="py-2 px-4 border-b">Valor</th></tr></thead><tbody>`;
+                const study = allFetchedStudies[index];
+                if (study) {
+                    let modalHtml = `<div class="p-2">
+                        <h4 class="font-bold text-lg mb-2 text-purple-700 border-b pb-2">${study.TipoEstudio || 'Detalle del Estudio'}</h4>
+                        <p class="text-sm text-gray-600 mb-4">Fecha: ${study.Fecha || 'No disponible'}</p>
+                        <table class="min-w-full text-sm">`;
                     
-                    const resultsObject = study.ResultadosLaboratorio || study.ResultadosEnfermeria || study.ResultadosMamografia || study;
-
-                    for (const key in resultsObject) {
-                        if (['DNI', 'Nombre', 'Apellido', 'Fecha', 'Prestador', 'TipoEstudio', 'LinkPDF', 'Fecha_cierre_Enf', 'Agudeza_Visual_PDF', 'Espirometria_PDF'].includes(key)) continue;
-                        const value = resultsObject[key];
-                        if (value && String(value).trim() !== '' && String(value).trim().toLowerCase() !== 'n/a') {
-                            const formattedKey = key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim();
-                            modalHtml += `<tr>
-                                <td class="py-2 px-4 border-b text-gray-700">${formattedKey}</td>
-                                <td class="py-2 px-4 border-b text-gray-900 font-medium">${value}</td>
-                            </tr>`;
+                    const results = study.ResultadosLaboratorio || study.ResultadosEnfermeria || study.ResultadosMamografia || study;
+                    for (const [key, value] of Object.entries(results)) {
+                        if (['DNI', 'Nombre', 'Apellido', 'Fecha', 'Prestador', 'TipoEstudio', 'LinkPDF'].includes(key)) continue;
+                        if (value && value !== 'N/A') {
+                            const label = key.replace(/_/g, ' ');
+                            modalHtml += `<tr class="border-b"><td class="py-1 font-semibold text-gray-700 capitalize">${label}:</td><td class="py-1 text-gray-900">${value}</td></tr>`;
                         }
                     }
-                    modalHtml += `</tbody></table>`;
-
-                    if (study.LinkPDF && study.LinkPDF.trim() !== '') {
-                        modalHtml += `<a href="${study.LinkPDF}" target="_blank" class="block mt-4 text-blue-500 hover:underline">Ver PDF <i class="fas fa-external-link-alt ml-1"></i></a>`;
+                    modalHtml += `</table>`;
+                    if (study.LinkPDF) {
+                        modalHtml += `<a href="${study.LinkPDF}" target="_blank" class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 transition">Ver PDF Original</a>`;
                     }
-
+                    modalHtml += `</div>`;
+                    
                     if (estudiosModalContent) estudiosModalContent.innerHTML = modalHtml;
-
-                        estudiosModalContent.style.maxHeight = '60vh';
-                        estudiosModalContent.style.overflowY = 'auto';
-                        
+                    if (modalDniSpan) modalDniSpan.textContent = currentPatientDNI;
                     if (estudiosModal) estudiosModal.classList.remove('hidden');
-                    if (modalDniSpan && currentPatientDNI) modalDniSpan.textContent = currentPatientDNI;
                 }
             }
         });
     }
 
-    if (closeEstudiosModal) {
-        closeEstudiosModal.addEventListener('click', () => {
-            if (estudiosModal) estudiosModal.classList.add('hidden');
-        });
-    }
-    
-    if (modalCloseButtonBottom) {
-        modalCloseButtonBottom.addEventListener('click', () => {
-            if (estudiosModal) estudiosModal.classList.add('hidden');
-        });
-    }
-
-    if (estudiosModal) {
-        estudiosModal.addEventListener('click', (e) => {
-            if (e.target === estudiosModal) {
-                estudiosModal.classList.add('hidden');
-            }
-        });
-    }
+    // Cerrar Modales
+    [closeEstudiosModal, modalCloseButtonBottom].forEach(btn => {
+        btn?.addEventListener('click', () => estudiosModal.classList.add('hidden'));
+    });
 
     // --- Lógica para guardar la consulta ---
     if (saveConsultationBtn) {
         saveConsultationBtn.addEventListener('click', async () => {
-            const dni = dniInput.value.trim();
-            const apellido = pacienteApellido.value.trim();
-            const nombre = pacienteNombre.value.trim();
-            const edad = pacienteEdad.value.trim();
-            const sexo = pacienteSexo.value.trim();
-            const motivoConsulta = motivoConsultaInput.value.trim();
-            const diagnostico = diagnosticoInput.value.trim();
-            const indicaciones = indicacionesInput.value.trim();
-            const recordatorios = recordatoriosInput.value.trim();
-
-            if (!dni || !apellido || !nombre || !edad || !sexo || !motivoConsulta || !diagnostico) {
-                alert('Por favor, complete todos los campos obligatorios: DNI, Apellido, Nombre, Edad, Sexo, Motivo y Diagnóstico.');
-                return;
-            }
-
-            if (!currentUserEmail) {
-                alert('La sesión del profesional ha expirado. Por favor, recargue la página.');
-                return;
-            }
-
-            if (saveConsultationBtn) {
-                saveConsultationBtn.disabled = true;
-                saveConsultationBtn.textContent = 'Guardando...';
-            }
-
-            const consultationData = {
-                'DNI': dni,
-                'Apellido': apellido,
-                'Nombre': nombre,
-                'Edad': edad,
-                'Sexo': sexo,
-                'motivo de consulta': motivoConsulta,
-                'diagnostico': diagnostico,
-                'indicaciones': indicaciones,
-                'recordatorio': recordatorios,
+            const payload = {
+                'DNI': dniInput.value.trim(),
+                'Apellido': pacienteApellido.value.trim(),
+                'Nombre': pacienteNombre.value.trim(),
+                'Edad': pacienteEdad.value.trim(),
+                'Sexo': pacienteSexo.value.trim(),
+                'motivo de consulta': motivoConsultaInput.value.trim(),
+                'diagnostico': diagnosticoInput.value.trim(),
+                'indicaciones': indicacionesInput.value.trim(),
+                'recordatorio': recordatoriosInput.value.trim(),
                 'Profesional': currentUserEmail,
-                'Fecha': new Date().toLocaleDateString('es-AR'),
+                'Fecha': new Date().toLocaleDateString('es-AR')
             };
+
+            if (!payload.DNI || !payload.Apellido || !payload['motivo de consulta']) {
+                alert('Complete los campos obligatorios del paciente y el motivo de consulta.');
+                return;
+            }
+
+            saveConsultationBtn.disabled = true;
+            saveConsultationBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
 
             try {
                 const response = await fetch('/guardar-consulta', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(consultationData)
+                    body: JSON.stringify(payload)
                 });
-
-                const result = await response.json();
-                if (result.success) {
-                    alert('Consulta guardada exitosamente.');
-                    dniInput.value = '';
-                    pacienteApellido.value = '';
-                    pacienteNombre.value = '';
-                    pacienteEdad.value = '';
-                    pacienteSexo.value = '';
-                    motivoConsultaInput.value = '';
-                    diagnosticoInput.value = '';
-                    indicacionesInput.value = '';
-                    recordatoriosInput.value = '';
-                    currentPatientData = null;
+                const res = await response.json();
+                if (res.success) {
+                    alert('Consulta guardada correctamente.');
+                    window.location.reload(); // Recargar para limpiar todo
                 } else {
-                    alert('Error al guardar la consulta: ' + result.message);
+                    alert('Error: ' + res.message);
                 }
-            } catch (error) {
-                console.error('Error al guardar la consulta:', error);
-                alert('Ocurrió un error al conectar con el servidor.');
+            } catch (e) {
+                alert('Error de conexión al guardar.');
             } finally {
-                if (saveConsultationBtn) {
-                    saveConsultationBtn.disabled = false;
-                    saveConsultationBtn.textContent = 'Guardar Consulta';
-                }
+                saveConsultationBtn.disabled = false;
+                saveConsultationBtn.textContent = 'Guardar Consulta';
             }
         });
     }
