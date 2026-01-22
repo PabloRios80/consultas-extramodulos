@@ -335,12 +335,17 @@ app.get('/consultas.html', (req, res) => {
     }
 });
 
-// Ruta raíz
 app.get('/', (req, res) => {
     if (req.isAuthenticated()) {
+        // Si ya está logueado, va directo al formulario
         res.redirect('/consultas.html');
     } else {
-        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+        /**
+         * ANTES: res.sendFile(path.join(__dirname, 'public', 'index.html'));
+         * AHORA: Redirigimos al formulario directamente. 
+         * Nota: Si tu formulario requiere login, el middleware de auth lo mandará a /login automáticamente.
+         */
+        res.redirect('/consultas.html');
     }
 });
 
