@@ -15,6 +15,8 @@ const PORT = process.env.PORT || 3000;
 const SPREADSHEET_ID_LECTURA = '15YPfBG9PBfN3nBW5xXJYjIXEgYIS9z71pI0VpeCtAAU';
 const SPREADSHEET_ID_ESCRITURA = process.env.SHEET_ID_CONSULTAS || 'TU_NUEVO_ID_AQUI';
 
+app.enable('trust proxy'); 
+
 // ====================================================================
 // MIDDLEWARES INICIALES
 // ====================================================================
@@ -80,7 +82,8 @@ async function initializeGoogleSheets() {
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL || `http://localhost:${PORT}/auth/google/callback`
+    callbackURL: "/auth/google/callback", // Usa la ruta relativa
+    proxy: true
 }, (accessToken, refreshToken, profile, done) => {
     return done(null, profile);
 }));
