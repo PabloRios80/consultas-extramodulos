@@ -17,6 +17,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Constantes para el resto del formulario
     const verEstudiosBtn = document.getElementById('ver-estudios-btn');
+     // 1. Crear el botón de historial dinámicamente para no tocar el HTML
+    const btnHistorial = document.createElement('button');
+    btnHistorial.id = 'ver-historial-btn';
+    btnHistorial.className = 'w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-all duration-300 hidden flex items-center justify-center';
+    btnHistorial.innerHTML = '<i class="fas fa-history mr-2"></i>Ver Historial de Consultas';
+    // Lo insertamos justo después del botón de estudios
+    verEstudiosBtn.parentNode.insertBefore(btnHistorial, verEstudiosBtn.nextSibling);
+
+    // 2. Modificación de la búsqueda (dentro de tu searchPatientBtn.addEventListener)
+    if (searchPatientBtn) {
+        searchPatientBtn.addEventListener('click', async () => {
+            const dni = dniInput.value.trim();
+            if (!dni) return;
+
+            // Ocultamos historial viejo al buscar nuevo
+            btnHistorial.classList.add('hidden');
+
+            // ... Tu lógica de fetch('/buscar') actual ...
+            // CUANDO EL PACIENTE ES ENCONTRADO (data.pacientePrincipal):
+            // Agrega esto:
+            btnHistorial.classList.remove('hidden'); 
+        });
+    }
+
+    // 3. Lógica del botón Historial
+    btnHistorial.addEventListener('click', async () => {
+        const dni = dniInput.value.trim();
+        const originalHtml = btnHistorial.innerHTML;
+        
+        btnHistorial.disabled = true;
+        btnHistorial.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Buscando en Consultas Extramódulos...';
+
+        try {
+            const response = await fetch('/obtener-historial-consultas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dni })
+            });
+            const data = await response.json();
+
+            if (data.success && data.historial.length > 0) {
+                abrirModalHistorial(data.historial);
+            } else {
+                alert('Este paciente no tiene consultas registradas en la base de Extramódulos.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error al conectar con la base de datos de consultas.');
+        } finally {
+            btnHistorial.disabled = false;
+            btnHistorial.innerHTML = originalHtml;
+        }
+    });
+
     const estudiosContainer = document.getElementById('estudios-container');
     const motivoConsultaInput = document.getElementById('motivo-consulta');
     const diagnosticoInput = document.getElementById('diagnostico');
@@ -31,11 +85,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalDniSpan = document.getElementById('modalDNI');
     const modalCloseButtonBottom = document.getElementById('modal-close-button-bottom');
 
+    
     // Variables de estado
     let currentUserEmail = null;
     let currentPatientDNI = null;
     let currentPatientData = null;
     let allFetchedStudies = [];
+
+    function abrirModalHistorial(consultas) {
+        const modal = document.getElementById('estudios-modal');
+        const content = document.getElementById('estudios-modal-content');
+        const title = modal.querySelector('h3');
+        
+        title.innerHTML = `<i class="fas fa-notes-medical mr-2"></i> Historial de Consultas`;
+        
+        let html = `<div class="space-y-4 p-2">`;
+        consultas.forEach(c => {
+            html += `
+                <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                    <div class="bg-blue-50 px-4 py-2 flex justify-between items-center border-b border-blue-100">
+                        <span class="font-bold text-blue-800"><i class="far fa-calendar-alt mr-1"></i> ${c.Fecha || 'S/D'}</span>
+                        <span class="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">${c.Profesional || 'Profesional'}</span>
+                    </div>
+                    <div class="p-4 bg-white space-y-2 text-sm">
+                        <p><strong>Motivo:</strong> <span class="text-gray-700">${c['motivo de consulta'] || 'N/A'}</span></p>
+                        <p><strong>Diagnóstico:</strong> <span class="text-gray-700">${c.diagnostico || 'N/A'}</span></p>
+                        ${c.indicaciones ? `<p class="bg-yellow-50 p-2 rounded"><strong>Indicaciones:</strong> ${c.indicaciones}</p>` : ''}
+                        ${c.recordatorio ? `<p class="text-gray-500 text-xs mt-1"><strong>Nota:</strong> ${c.recordatorio}</p>` : ''}
+                    </div>
+                </div>
+            `;
+        });
+        html += `</div>`;
+        
+        content.innerHTML = html;
+        modal.classList.remove('hidden');
+    }
+
 
     // Función para limpiar la información del paciente
     function clearPatientInfo() {
@@ -46,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (patientNotFound) patientNotFound.classList.add('hidden');
         if (estudiosContainer) estudiosContainer.innerHTML = '';
         if (verEstudiosBtn) verEstudiosBtn.classList.add('hidden');
-    }
+        }
 
     // --- Lógica de Autenticación ---
     async function checkAuthStatus() {

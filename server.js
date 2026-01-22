@@ -277,8 +277,47 @@ app.post('/guardar-consulta', async (req, res) => {
         res.json({ success: true });
     } catch (error) { res.status(500).json({ success: false }); }
 });
+app.post('/obtener-historial-consultas', async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ success: false, message: 'No autorizado' });
 
-// ====================================================================
+    const { dni } = req.body;
+    if (!dni) return res.status(400).json({ success: false, message: 'DNI requerido' });
+
+    try {
+        await docEscritura.loadInfo();
+        const sheet = docEscritura.sheetsByTitle['Consultas'];
+        
+        if (!sheet) {
+            return res.json({ success: true, historial: [] });
+        }
+
+        const rows = await sheet.getRows();
+
+        // Filtramos y mapeamos usando acceso directo a propiedades
+        const historial = rows
+            .filter(row => {
+                // Probamos con 'DNI' o 'dni' según cómo lo interprete la librería
+                const rowDni = row.DNI || row.dni;
+                return String(rowDni).trim() === String(dni).trim();
+            })
+            .map(row => ({
+                'Fecha': row.Fecha || '',
+                'Profesional': row.Profesional || '',
+                'motivo de consulta': row['Motivo de consulta'] || '', // Coincide con tu cabecera de Excel
+                'diagnostico': row.Diagnostico || '',
+                'indicaciones': row.Indicaciones || '',
+                'recordatorio': row.Recordatorio || ''
+            }))
+            .reverse();
+
+        res.json({ success: true, historial });
+
+    } catch (error) {
+        console.error('Error detallado en historial:', error);
+        res.status(500).json({ success: false, message: 'Error al procesar el historial' });
+    }
+});
+        // ====================================================================
 // ACCESO A ARCHIVOS PRIVADOS (PROTECCIÓN DEL RULO)
 // ====================================================================
 
