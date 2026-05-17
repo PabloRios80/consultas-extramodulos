@@ -79,8 +79,13 @@ if (searchPatientBtn) {
                     <p class="text-red-600">${mensaje}</p>
                     <p class="text-xs text-gray-500 mt-2">Si considera que esta situación requiere una excepción, contacte al coordinador del programa.</p>
                 `;
-                patientDetails?.after(bloqueDiv);
+                document.getElementById('mensajes-container').appendChild(bloqueDiv);
                 if (patientNotFound) patientNotFound.classList.add('hidden');
+                // Deshabilitar formulario cuando hay bloqueo
+                if (consultationSection) consultationSection.classList.add('hidden');
+                if (saveConsultationBtn) saveConsultationBtn.disabled = true;
+                if (verEstudiosBtn) verEstudiosBtn.classList.add('hidden');
+                btnHistorial.classList.add('hidden');
                 return;
             }
 
@@ -95,7 +100,7 @@ if (searchPatientBtn) {
                 });
                 html += `<p class="text-xs text-gray-500 mt-2">Consultas este mes: ${data.cantMes}/2 | Este año: ${data.cantAnio}/${data.limiteAnio}</p>`;
                 alertasDiv.innerHTML = html;
-                patientDetails?.after(alertasDiv);
+                document.getElementById('mensajes-container').appendChild(alertasDiv);
             }
 
             // Mostrar formulario
@@ -195,9 +200,9 @@ if (searchPatientBtn) {
         modal.classList.remove('hidden');
     }
 
-
-    // Función para limpiar la información del paciente
     function clearPatientInfo() {
+        const mensajes = document.getElementById('mensajes-container');
+        if (mensajes) mensajes.innerHTML = '';
         if (pacienteApellido) pacienteApellido.value = '';
         if (pacienteNombre) pacienteNombre.value = '';
         if (pacienteEdad) pacienteEdad.value = '';
@@ -205,7 +210,11 @@ if (searchPatientBtn) {
         if (patientNotFound) patientNotFound.classList.add('hidden');
         if (estudiosContainer) estudiosContainer.innerHTML = '';
         if (verEstudiosBtn) verEstudiosBtn.classList.add('hidden');
-        }
+        // Agregar esto:
+        document.querySelectorAll('.bloqueo-div, .alertas-div').forEach(el => el.remove());
+        if (consultationSection) consultationSection.classList.add('hidden');
+        if (saveConsultationBtn) saveConsultationBtn.disabled = false;
+    }
 
     // --- Lógica de Autenticación ---
     async function checkAuthStatus() {
@@ -238,6 +247,11 @@ if (searchPatientBtn) {
 
             // Reset visual
             clearPatientInfo();
+            document.querySelectorAll('.bloqueo-div, .alertas-div').forEach(el => el.remove());
+            if (consultationSection) consultationSection.classList.add('hidden');
+            if (saveConsultationBtn) saveConsultationBtn.disabled = false;
+            if (verEstudiosBtn) verEstudiosBtn.classList.add('hidden');
+            btnHistorial.classList.add('hidden');
             searchPatientBtn.disabled = true;
             searchPatientBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Buscando...';
 
