@@ -9,6 +9,14 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const { createClient } = require('@supabase/supabase-js');
+const axios = require('axios');
+
+const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY
+);
+
 // ====================================================================
 // CONFIGURACIÓN DE IDs DE PLANILLAS
 // ====================================================================
@@ -263,19 +271,64 @@ app.post('/obtener-estudios-paciente', async (req, res) => {
         res.json({ success: true, estudios: estudiosEncontrados });
     } catch (error) { res.status(500).json({ error: 'Error al obtener estudios' }); }
 });
-
 app.post('/guardar-consulta', async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ success: false, message: 'No autorizado' });
+
+    const data = req.body; // PRIMERO definimos data
+
     try {
+        // 1. Guardar en Supabase
+        const { error: supaError } = await supabase
+            .from('consultas_extramodulo')
+            .insert({
+                dni: data.DNI,
+                apellido: data.Apellido,
+                nombre: data.Nombre,
+                edad: data.Edad,
+                sexo: data.Sexo,
+                motivo_consulta: data['motivo de consulta'],
+                diagnostico: data.diagnostico,
+                indicaciones: data.indicaciones,
+                recordatorio: data.recordatorio,
+                profesional: req.user.displayName,
+                fecha: new Date()
+            });
+
+        if (supaError) {
+            console.error('Error Supabase consulta:', supaError);
+        } else {
+            console.log('✅ Consulta guardada en Supabase para DNI:', data.DNI);
+        }
+
+        // 2. Guardar en Google Sheets
         await docEscritura.loadInfo();
         let sheet = docEscritura.sheetsByTitle['Consultas'];
         if (!sheet) {
-            sheet = await docEscritura.addSheet({ title: 'Consultas', headerValues: ['DNI', 'Nombre', 'Apellido', 'Edad', 'Sexo', 'Motivo de consulta', 'Diagnostico', 'Indicaciones', 'Recordatorio', 'Profesional', 'Fecha'] });
+            sheet = await docEscritura.addSheet({ 
+                title: 'Consultas', 
+                headerValues: ['DNI', 'Nombre', 'Apellido', 'Edad', 'Sexo', 'Motivo de consulta', 'Diagnostico', 'Indicaciones', 'Recordatorio', 'Profesional', 'Fecha'] 
+            });
         }
-        const data = req.body;
-        await sheet.addRow({ 'DNI': data.DNI, 'Nombre': data.Nombre, 'Apellido': data.Apellido, 'Edad': data.Edad, 'Sexo': data.Sexo, 'Motivo de consulta': data['motivo de consulta'], 'Diagnostico': data.diagnostico, 'Indicaciones': data.indicaciones, 'Recordatorio': data.recordatorio, 'Profesional': req.user.displayName, 'Fecha': new Date().toLocaleString('es-AR') });
+        await sheet.addRow({ 
+            'DNI': data.DNI, 
+            'Nombre': data.Nombre, 
+            'Apellido': data.Apellido, 
+            'Edad': data.Edad, 
+            'Sexo': data.Sexo, 
+            'Motivo de consulta': data['motivo de consulta'], 
+            'Diagnostico': data.diagnostico, 
+            'Indicaciones': data.indicaciones, 
+            'Recordatorio': data.recordatorio, 
+            'Profesional': req.user.displayName, 
+            'Fecha': new Date().toLocaleString('es-AR') 
+        });
+
         res.json({ success: true });
-    } catch (error) { res.status(500).json({ success: false }); }
+
+    } catch (error) { 
+        console.error('Error guardar consulta:', error);
+        res.status(500).json({ success: false }); 
+    }
 });
 app.post('/obtener-historial-consultas', async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ success: false, message: 'No autorizado' });
@@ -346,6 +399,159 @@ app.get('/', (req, res) => {
          * Nota: Si tu formulario requiere login, el middleware de auth lo mandará a /login automáticamente.
          */
         res.redirect('/consultas.html');
+    }
+});
+
+app.post('/api/verificar-paciente-extramodulo', async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ success: false });
+    
+    const { dni } = req.body;
+    if (!dni) return res.status(400).json({ success: false, message: 'DNI requerido.' });
+
+    const hoy = new Date();
+    const mesActual = hoy.getMonth() + 1;
+    const anioActual = hoy.getFullYear();
+
+    try {
+        // 1. Verificar en IAPOS
+        const fechaHoy = hoy.toISOString().split('T')[0];
+        const soapBody = `<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap:Body>
+                <BEWsValidaAfi.Execute xmlns="IAPOS_WS">
+                    <Usuario>CONSULTAPDP</Usuario>
+                    <Passwd>1Qaz</Passwd>
+                    <Nafiliado>${dni}</Nafiliado>
+                    <Badocnumdo>${dni}</Badocnumdo>
+                    <Tidocodigo_de_documento>96</Tidocodigo_de_documento>
+                    <Ogorcodigo>1</Ogorcodigo>
+                    <Fechpresta>${fechaHoy}</Fechpresta>
+                </BEWsValidaAfi.Execute>
+            </soap:Body>
+        </soap:Envelope>`;
+
+        let datosIAPOS = null;
+        try {
+            const iaposRes = await axios.post(
+                'https://aswe.santafe.gov.ar/iapos-sw-srvt/servlet/abewsvalidaafi',
+                soapBody,
+                { headers: { 'Content-Type': 'text/xml; charset=utf-8', 'SOAPAction': 'IAPOS_WSaction/ABEWSVALIDAAFI.Execute' }, timeout: 10000 }
+            );
+            const xml = iaposRes.data;
+            const getValor = (tag) => {
+                const match = xml.match(new RegExp(`<${tag}[^>]*>([^<]+)<\/${tag}>`));
+                return match ? match[1].trim() : null;
+            };
+            datosIAPOS = {
+                esActivo: getValor('Estado') === 'A',
+                nombre: getValor('Apenom'),
+                edad: getValor('Edad'),
+                sexo: getValor('Sexo'),
+                localidad: getValor('Localidad')
+            };
+        } catch (e) {
+            console.error('Error IAPOS:', e.message);
+        }
+
+        // 2. Verificar DP previo en historial
+        const { data: historial } = await supabase
+            .from('historial_dia_preventivo')
+            .select('fechax, tipo')
+            .eq('dni', dni)
+            .in('tipo', ['Adultos', 'Pediatria'])
+            .order('fechax', { ascending: false })
+            .limit(1);
+
+        const ultimoDP = historial?.[0] || null;
+        const dosAniosAtras = new Date();
+        dosAniosAtras.setFullYear(dosAniosAtras.getFullYear() - 2);
+
+        let bloqueado = false;
+        let motivoBloqueo = null;
+
+        // Verificar si tiene DP previo
+        if (!ultimoDP) {
+            bloqueado = true;
+            motivoBloqueo = 'NO_DP';
+        } else if (new Date(ultimoDP.fechax) < dosAniosAtras) {
+            bloqueado = true;
+            motivoBloqueo = 'DP_VENCIDO';
+        }
+
+        // 3. Contar consultas del mes y del año
+        const { data: consultasMes } = await supabase
+            .from('consultas_extramodulo')
+            .select('id')
+            .eq('dni', dni)
+            .gte('created_at', `${anioActual}-${String(mesActual).padStart(2,'0')}-01`)
+            .lt('created_at', `${anioActual}-${String(mesActual + 1).padStart(2,'0')}-01`);
+
+        const { data: consultasAnio } = await supabase
+            .from('consultas_extramodulo')
+            .select('id')
+            .eq('dni', dni)
+            .gte('created_at', `${anioActual}-01-01`);
+
+        const cantMes = consultasMes?.length || 0;
+        const cantAnio = consultasAnio?.length || 0;
+
+        // 4. Verificar permisos especiales
+        const { data: permiso } = await supabase
+            .from('permisos_especiales')
+            .select('*')
+            .eq('dni_paciente', dni)
+            .eq('tipo_permiso', 'extramodulo_extra')
+            .eq('activo', true)
+            .single();
+
+        const extraPermitido = permiso?.cantidad_extra || 0;
+        const limiteAnio = 6 + extraPermitido;
+
+        if (!bloqueado && cantMes >= 2) {
+            bloqueado = true;
+            motivoBloqueo = 'LIMITE_MES';
+        }
+
+        if (!bloqueado && cantAnio >= limiteAnio) {
+            bloqueado = true;
+            motivoBloqueo = 'LIMITE_ANIO';
+        }
+
+        // 5. Alertas clínicas del último cierre
+        const { data: ultimoCierre } = await supabase
+            .from('historial_dia_preventivo')
+            .select('cancer_cervico_hpv, somf, diabetes, dislipemias, presion_arterial, osteoporosis, epoc')
+            .eq('dni', dni)
+            .order('fechax', { ascending: false })
+            .limit(1);
+
+        const alertas = [];
+        const cierre = ultimoCierre?.[0];
+        if (cierre) {
+            if (cierre.cancer_cervico_hpv === 'Patologico') alertas.push({ tipo: 'URGENTE', mensaje: '🔴 HPV Patológico — verificar PAP' });
+            if (cierre.somf === 'Patologico') alertas.push({ tipo: 'URGENTE', mensaje: '🔴 SOMF Patológico — indicar VCC urgente' });
+            if (cierre.diabetes === 'Presenta') alertas.push({ tipo: 'RIESGO', mensaje: '⚠️ Diabetes — verificar HbA1c y fondo de ojo' });
+            if (cierre.dislipemias === 'Presenta') alertas.push({ tipo: 'RIESGO', mensaje: '⚠️ Dislipemia — verificar tratamiento' });
+            if (cierre.presion_arterial === 'Hipertensión') alertas.push({ tipo: 'RIESGO', mensaje: '⚠️ Hipertensión — verificar tratamiento' });
+            if (cierre.osteoporosis === 'Se verifica') alertas.push({ tipo: 'RIESGO', mensaje: '⚠️ Osteoporosis — verificar tratamiento' });
+            if (cierre.epoc === 'Se verifica') alertas.push({ tipo: 'RIESGO', mensaje: '⚠️ EPOC — verificar espirometría' });
+        }
+
+        res.json({
+            success: true,
+            bloqueado,
+            motivoBloqueo,
+            iapos: datosIAPOS,
+            ultimoDP,
+            cantMes,
+            cantAnio,
+            limiteAnio,
+            alertas
+        });
+
+    } catch (e) {
+        console.error('Error verificar extramodulo:', e.message);
+        res.status(500).json({ success: false, message: e.message });
     }
 });
 

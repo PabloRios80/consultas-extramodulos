@@ -24,22 +24,95 @@ document.addEventListener('DOMContentLoaded', () => {
     btnHistorial.innerHTML = '<i class="fas fa-history mr-2"></i>Ver Historial de Consultas';
     // Lo insertamos justo después del botón de estudios
     verEstudiosBtn.parentNode.insertBefore(btnHistorial, verEstudiosBtn.nextSibling);
+if (searchPatientBtn) {
+    searchPatientBtn.addEventListener('click', async () => {
+        const dni = dniInput.value.trim();
+        if (!dni) {
+            alert('Por favor ingrese un DNI.');
+            return;
+        }
 
-    // 2. Modificación de la búsqueda (dentro de tu searchPatientBtn.addEventListener)
-    if (searchPatientBtn) {
-        searchPatientBtn.addEventListener('click', async () => {
-            const dni = dniInput.value.trim();
-            if (!dni) return;
+        clearPatientInfo();
+        searchPatientBtn.disabled = true;
+        searchPatientBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verificando...';
 
-            // Ocultamos historial viejo al buscar nuevo
-            btnHistorial.classList.add('hidden');
+        try {
+            const response = await fetch('/api/verificar-paciente-extramodulo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dni })
+            });
+            const data = await response.json();
 
-            // ... Tu lógica de fetch('/buscar') actual ...
-            // CUANDO EL PACIENTE ES ENCONTRADO (data.pacientePrincipal):
-            // Agrega esto:
-            btnHistorial.classList.remove('hidden'); 
-        });
-    }
+            // Mostrar datos del paciente desde IAPOS
+            if (data.iapos?.esActivo) {
+                const partes = (data.iapos.nombre || '').split(',');
+                if (pacienteApellido) pacienteApellido.value = partes[0]?.trim() || '';
+                if (pacienteNombre) pacienteNombre.value = partes[1]?.trim() || '';
+                if (pacienteEdad) pacienteEdad.value = data.iapos.edad || '';
+                if (pacienteSexo) pacienteSexo.value = data.iapos.sexo === '2' ? 'Femenino' : 'Masculino';
+                currentPatientDNI = dni;
+                currentPatientData = data.iapos;
+            } else {
+                alert('⚠️ El afiliado no está activo en IAPOS.');
+                return;
+            }
+
+            // Verificar bloqueos
+            if (data.bloqueado) {
+                let mensaje = '';
+                if (data.motivoBloqueo === 'NO_DP') {
+                    mensaje = '❌ Este afiliado no tiene un Día Preventivo previo. No puede acceder a consultas extramodulo.';
+                } else if (data.motivoBloqueo === 'DP_VENCIDO') {
+                    mensaje = `⚠️ El último Día Preventivo fue el ${data.ultimoDP.fechax} — hace más de 2 años. El afiliado debe repetir el DP para continuar con las consultas extramodulo.`;
+                } else if (data.motivoBloqueo === 'LIMITE_MES') {
+                    mensaje = `❌ Este afiliado ya tuvo ${data.cantMes} consultas este mes. El límite es 2 por mes calendario.`;
+                } else if (data.motivoBloqueo === 'LIMITE_ANIO') {
+                    mensaje = `❌ Este afiliado ya tuvo ${data.cantAnio} consultas este año. El límite es ${data.limiteAnio} por año.`;
+                }
+
+                // Mostrar bloqueo en pantalla
+                const bloqueDiv = document.createElement('div');
+                bloqueDiv.className = 'bg-red-50 border border-red-300 rounded-lg p-4 mt-4';
+                bloqueDiv.innerHTML = `
+                    <p class="font-bold text-red-700 text-lg mb-2">🚫 Consulta bloqueada</p>
+                    <p class="text-red-600">${mensaje}</p>
+                    <p class="text-xs text-gray-500 mt-2">Si considera que esta situación requiere una excepción, contacte al coordinador del programa.</p>
+                `;
+                patientDetails?.after(bloqueDiv);
+                if (patientNotFound) patientNotFound.classList.add('hidden');
+                return;
+            }
+
+            // Mostrar alertas clínicas
+            if (data.alertas?.length > 0) {
+                const alertasDiv = document.createElement('div');
+                alertasDiv.className = 'bg-yellow-50 border border-yellow-300 rounded-lg p-4 mt-4';
+                let html = '<p class="font-bold text-yellow-800 mb-2">⚠️ Alertas Clínicas:</p>';
+                data.alertas.forEach(a => {
+                    const color = a.tipo === 'URGENTE' ? 'text-red-600' : 'text-yellow-700';
+                    html += `<p class="${color} text-sm">${a.mensaje}</p>`;
+                });
+                html += `<p class="text-xs text-gray-500 mt-2">Consultas este mes: ${data.cantMes}/2 | Este año: ${data.cantAnio}/${data.limiteAnio}</p>`;
+                alertasDiv.innerHTML = html;
+                patientDetails?.after(alertasDiv);
+            }
+
+            // Mostrar formulario
+            if (verEstudiosBtn) verEstudiosBtn.classList.remove('hidden');
+            btnHistorial.classList.remove('hidden');
+            if (consultationSection) consultationSection.classList.remove('hidden');
+            if (patientNotFound) patientNotFound.classList.add('hidden');
+
+        } catch (error) {
+            console.error('Error al buscar paciente:', error);
+            alert('Error al conectar con el servidor.');
+        } finally {
+            searchPatientBtn.disabled = false;
+            searchPatientBtn.innerHTML = '<i class="fas fa-search mr-2"></i>Buscar';
+        }
+    });
+}
 
     // 3. Lógica del botón Historial
     btnHistorial.addEventListener('click', async () => {
