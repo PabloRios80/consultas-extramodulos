@@ -2,10 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
-const session = require('express-session');
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -32,24 +28,6 @@ app.use(express.json());
 
 // IMPORTANTE: Servir estáticos ANTES de las protecciones para evitar 401 en JS/CSS
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Configuración de sesión optimizada para producción (Render)
-app.use(session({
-    secret: 'secret-key-extramodulos',
-    resave: false,
-    saveUninitialized: false, // Cambiado a false para evitar rulos de sesión vacía
-    cookie: { 
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 24 * 60 * 60 * 1000 
-    }
-}));
-
-if (process.env.NODE_ENV === 'production') {
-    app.set('trust proxy', 1); // Necesario para cookies seguras en Render
-}
-
-app.use(passport.initialize());
-app.use(passport.session());
 
 // ====================================================================
 // VARIABLES GLOBALES Y CONEXIÓN
@@ -83,47 +61,6 @@ async function initializeGoogleSheets() {
         console.error('❌ Error inicializando Google Sheets:', error);
     }
 }
-
-// ====================================================================
-// ESTRATEGIA PASSPORT (GOOGLE)
-// ====================================================================
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/auth/google/callback", // Usa la ruta relativa
-    proxy: true
-}, (accessToken, refreshToken, profile, done) => {
-    return done(null, profile);
-}));
-
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((obj, done) => done(null, obj));
-
-// Rutas Auth
-app.get('/auth/google', (req, res, next) => {
-    // Guardamos la intención de navegación si viene por query
-    if (req.query.returnTo) {
-        req.session.returnTo = req.query.returnTo;
-    }
-    next();
-}, passport.authenticate('google', { scope: ['profile', 'email'] }));
-
-app.get('/auth/google/callback', 
-    passport.authenticate('google', { failureRedirect: '/login-error.html' }),
-    (req, res) => {
-        const redirectUrl = req.session.returnTo || '/consultas.html';
-        delete req.session.returnTo; // Limpiar para que no afecte futuros logins
-        res.redirect(redirectUrl);
-    }
-);
-
-app.get('/api/user', (req, res) => {
-    if (req.isAuthenticated()) {
-        res.json({ isLoggedIn: true, user: { name: req.user.displayName, email: req.user.emails[0].value } });
-    } else {
-        res.json({ isLoggedIn: false });
-    }
-});
 
 // ====================================================================
 // RUTAS DE DATOS (Mantenidas sin cambios de lógica)
@@ -272,7 +209,6 @@ app.post('/obtener-estudios-paciente', async (req, res) => {
     } catch (error) { res.status(500).json({ error: 'Error al obtener estudios' }); }
 });
 app.post('/guardar-consulta', async (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).json({ success: false, message: 'No autorizado' });
 
     const data = req.body; // PRIMERO definimos data
 
@@ -290,7 +226,7 @@ app.post('/guardar-consulta', async (req, res) => {
                 diagnostico: data.diagnostico,
                 indicaciones: data.indicaciones,
                 recordatorio: data.recordatorio,
-                profesional: req.user.displayName,
+                profesional: data.Profesional || 'Desconocido',
                 fecha: new Date()
             });
 
@@ -319,7 +255,7 @@ app.post('/guardar-consulta', async (req, res) => {
             'Diagnostico': data.diagnostico, 
             'Indicaciones': data.indicaciones, 
             'Recordatorio': data.recordatorio, 
-            'Profesional': req.user.displayName, 
+            'Profesional': data.Profesional || 'Desconocido',
             'Fecha': new Date().toLocaleString('es-AR') 
         });
 
@@ -331,7 +267,6 @@ app.post('/guardar-consulta', async (req, res) => {
     }
 });
 app.post('/obtener-historial-consultas', async (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).json({ success: false, message: 'No autorizado' });
 
     const { dni } = req.body;
     if (!dni) return res.status(400).json({ success: false, message: 'DNI requerido' });
@@ -373,37 +308,14 @@ app.post('/obtener-historial-consultas', async (req, res) => {
         // ====================================================================
 // ACCESO A ARCHIVOS PRIVADOS (PROTECCIÓN DEL RULO)
 // ====================================================================
-
-// Esta ruta sirve el archivo solo si está autenticado
 app.get('/consultas.html', (req, res) => {
-    if (req.isAuthenticated()) {
-        // Suponiendo que tus archivos protegidos están en una carpeta 'private' o similar
-        // Si están en 'public', cámbialos de carpeta o el rulo seguirá.
-        const filePath = path.join(__dirname, 'private', 'consultas.html');
-        res.sendFile(filePath);
-    } else {
-        // Guardamos que quería entrar aquí
-        req.session.returnTo = '/consultas.html';
-        res.redirect('/auth/google');
-    }
+    res.sendFile(path.join(__dirname, 'private', 'consultas.html'));
 });
-
 app.get('/', (req, res) => {
-    if (req.isAuthenticated()) {
-        // Si ya está logueado, va directo al formulario
-        res.redirect('/consultas.html');
-    } else {
-        /**
-         * ANTES: res.sendFile(path.join(__dirname, 'public', 'index.html'));
-         * AHORA: Redirigimos al formulario directamente. 
-         * Nota: Si tu formulario requiere login, el middleware de auth lo mandará a /login automáticamente.
-         */
-        res.redirect('/consultas.html');
-    }
+    res.redirect('/consultas.html');
 });
 
 app.post('/api/verificar-paciente-extramodulo', async (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).json({ success: false });
     
     const { dni } = req.body;
     if (!dni) return res.status(400).json({ success: false, message: 'DNI requerido.' });
