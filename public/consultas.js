@@ -215,23 +215,15 @@ if (searchPatientBtn) {
         if (consultationSection) consultationSection.classList.add('hidden');
         if (saveConsultationBtn) saveConsultationBtn.disabled = false;
     }
-
-    // --- Lógica de Autenticación ---
-    async function checkAuthStatus() {
-        try {
-            const response = await fetch('/api/user');
-            const data = await response.json();
-    
-            if (data.isLoggedIn) {
-                currentUserEmail = data.user.email;
-                if (authContainer) authContainer.classList.add('hidden');
-                if (mainContainer) mainContainer.classList.remove('hidden');
-                if (authStatus) authStatus.textContent = `Usuario: ${data.user.name}`;
-            } else {
-                if (mainContainer) mainContainer.classList.add('hidden');
-            }
-        } catch (error) {
-            console.error('Error al verificar autenticación:', error);
+    function checkAuthStatus() {
+        const prof = window.dpProfesional;
+        if (prof && prof.nombre) {
+            currentUserEmail = `${prof.nombre} ${prof.apellido}`;
+            if (authContainer) authContainer.classList.add('hidden');
+            if (mainContainer) mainContainer.classList.remove('hidden');
+            if (authStatus) authStatus.textContent = `Usuario: ${prof.nombre} ${prof.apellido}`;
+        } else {
+            if (mainContainer) mainContainer.classList.add('hidden');
         }
     }
     checkAuthStatus();
