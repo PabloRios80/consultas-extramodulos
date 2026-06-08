@@ -312,7 +312,12 @@ app.get('/consultas.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'private', 'consultas.html'));
 });
 app.get('/', (req, res) => {
-    res.redirect('/consultas.html');
+    const token = req.query.token;
+    if (token) {
+        res.redirect('/consultas.html?token=' + token);
+    } else {
+        res.redirect('/consultas.html');
+    }
 });
 
 app.post('/api/verificar-paciente-extramodulo', async (req, res) => {
