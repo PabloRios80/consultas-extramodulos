@@ -397,7 +397,7 @@ if (searchPatientBtn) {
                 'diagnostico': diagnosticoInput.value.trim(),
                 'indicaciones': indicacionesInput.value.trim(),
                 'recordatorio': recordatoriosInput.value.trim(),
-                'Profesional': currentUserEmail,
+                'Profesional': window.dpProfesional ? `${window.dpProfesional.nombre} ${window.dpProfesional.apellido}` : 'Desconocido',
                 'Fecha': new Date().toLocaleDateString('es-AR')
             };
 
