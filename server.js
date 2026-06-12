@@ -375,7 +375,7 @@ app.post('/api/verificar-paciente-extramodulo', async (req, res) => {
             .from('historial_dia_preventivo')
             .select('fechax, tipo')
             .eq('dni', dni)
-            .in('tipo', ['Adultos', 'Pediatria'])
+            .in('tipo', ['Adultos', 'Pediatria', 'Pediatrico'])
             .order('fechax', { ascending: false })
             .limit(1);
 
