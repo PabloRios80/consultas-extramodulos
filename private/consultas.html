@@ -56,6 +56,10 @@
                 </div>
                 <h1 class="text-xl font-bold">Registro de Consulta</h1>
             </div>
+            <button onclick="cerrarSesionGlobal()"
+                class="px-2 py-1 bg-blue-800 hover:bg-red-700 text-white text-xs rounded-lg opacity-60 hover:opacity-100 transition">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
         </div>
     </div>
 </header>
@@ -172,5 +176,13 @@
         </div>
     </div>
     <script src="/consultas.js"></script>
+    <script>
+    function cerrarSesionGlobal() {
+        if (!confirm('¿Cerrar sesión?')) return;
+        localStorage.removeItem('dpToken');
+        localStorage.removeItem('dpProfesional');
+        window.location.href = 'https://acceso.diapreventivoiapos.com';
+    }
+</script>
 </body>
 </html>
