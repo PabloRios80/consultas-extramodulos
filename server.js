@@ -209,11 +209,10 @@ app.post('/obtener-estudios-paciente', async (req, res) => {
     } catch (error) { res.status(500).json({ error: 'Error al obtener estudios' }); }
 });
 app.post('/guardar-consulta', async (req, res) => {
-
-    const data = req.body; // PRIMERO definimos data
+    const data = req.body;
 
     try {
-        // 1. Guardar en Supabase
+        // 1. Guardar en Supabase (principal)
         const { error: supaError } = await supabase
             .from('consultas_extramodulo')
             .insert({
@@ -232,32 +231,38 @@ app.post('/guardar-consulta', async (req, res) => {
 
         if (supaError) {
             console.error('Error Supabase consulta:', supaError);
-        } else {
-            console.log('✅ Consulta guardada en Supabase para DNI:', data.DNI);
+            return res.status(500).json({ success: false, message: 'Error al guardar en base de datos.' });
         }
 
-        // 2. Guardar en Google Sheets
-        await docEscritura.loadInfo();
-        let sheet = docEscritura.sheetsByTitle['Consultas'];
-        if (!sheet) {
-            sheet = await docEscritura.addSheet({ 
-                title: 'Consultas', 
-                headerValues: ['DNI', 'Nombre', 'Apellido', 'Edad', 'Sexo', 'Motivo de consulta', 'Diagnostico', 'Indicaciones', 'Recordatorio', 'Profesional', 'Fecha'] 
+        console.log('✅ Consulta guardada en Supabase para DNI:', data.DNI);
+
+        // 2. Guardar en Google Sheets (secundario — no bloquea si falla)
+        try {
+            await docEscritura.loadInfo();
+            let sheet = docEscritura.sheetsByTitle['Consultas'];
+            if (!sheet) {
+                sheet = await docEscritura.addSheet({ 
+                    title: 'Consultas', 
+                    headerValues: ['DNI', 'Nombre', 'Apellido', 'Edad', 'Sexo', 'Motivo de consulta', 'Diagnostico', 'Indicaciones', 'Recordatorio', 'Profesional', 'Fecha'] 
+                });
+            }
+            await sheet.addRow({ 
+                'DNI': data.DNI, 
+                'Nombre': data.Nombre, 
+                'Apellido': data.Apellido, 
+                'Edad': data.Edad, 
+                'Sexo': data.Sexo, 
+                'Motivo de consulta': data['motivo de consulta'], 
+                'Diagnostico': data.diagnostico, 
+                'Indicaciones': data.indicaciones, 
+                'Recordatorio': data.recordatorio, 
+                'Profesional': data.Profesional || 'Desconocido',
+                'Fecha': new Date().toLocaleString('es-AR') 
             });
+            console.log('✅ Consulta guardada en Sheets para DNI:', data.DNI);
+        } catch (sheetsError) {
+            console.error('⚠️ Error guardando en Sheets (Supabase sí guardó):', sheetsError.message);
         }
-        await sheet.addRow({ 
-            'DNI': data.DNI, 
-            'Nombre': data.Nombre, 
-            'Apellido': data.Apellido, 
-            'Edad': data.Edad, 
-            'Sexo': data.Sexo, 
-            'Motivo de consulta': data['motivo de consulta'], 
-            'Diagnostico': data.diagnostico, 
-            'Indicaciones': data.indicaciones, 
-            'Recordatorio': data.recordatorio, 
-            'Profesional': data.Profesional || 'Desconocido',
-            'Fecha': new Date().toLocaleString('es-AR') 
-        });
 
         res.json({ success: true });
 
@@ -267,42 +272,32 @@ app.post('/guardar-consulta', async (req, res) => {
     }
 });
 app.post('/obtener-historial-consultas', async (req, res) => {
-
     const { dni } = req.body;
     if (!dni) return res.status(400).json({ success: false, message: 'DNI requerido' });
 
     try {
-        await docEscritura.loadInfo();
-        const sheet = docEscritura.sheetsByTitle['Consultas'];
-        
-        if (!sheet) {
-            return res.json({ success: true, historial: [] });
-        }
+        const { data: historial, error } = await supabase
+            .from('consultas_extramodulo')
+            .select('fecha, profesional, motivo_consulta, diagnostico, indicaciones, recordatorio')
+            .eq('dni', dni)
+            .order('created_at', { ascending: false });
 
-        const rows = await sheet.getRows();
+        if (error) throw error;
 
-        // Filtramos y mapeamos usando acceso directo a propiedades
-        const historial = rows
-            .filter(row => {
-                // Probamos con 'DNI' o 'dni' según cómo lo interprete la librería
-                const rowDni = row.DNI || row.dni;
-                return String(rowDni).trim() === String(dni).trim();
-            })
-            .map(row => ({
-                'Fecha': row.Fecha || '',
-                'Profesional': row.Profesional || '',
-                'motivo de consulta': row['Motivo de consulta'] || '', // Coincide con tu cabecera de Excel
-                'diagnostico': row.Diagnostico || '',
-                'indicaciones': row.Indicaciones || '',
-                'recordatorio': row.Recordatorio || ''
-            }))
-            .reverse();
+        const resultado = (historial || []).map(row => ({
+            'Fecha': row.fecha ? new Date(row.fecha).toLocaleString('es-AR') : '',
+            'Profesional': row.profesional || '',
+            'motivo de consulta': row.motivo_consulta || '',
+            'diagnostico': row.diagnostico || '',
+            'indicaciones': row.indicaciones || '',
+            'recordatorio': row.recordatorio || ''
+        }));
 
-        res.json({ success: true, historial });
+        res.json({ success: true, historial: resultado });
 
     } catch (error) {
-        console.error('Error detallado en historial:', error);
-        res.status(500).json({ success: false, message: 'Error al procesar el historial' });
+        console.error('Error historial consultas:', error.message);
+        res.status(500).json({ success: false, message: 'Error al obtener historial' });
     }
 });
         // ====================================================================
