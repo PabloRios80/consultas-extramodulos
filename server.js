@@ -264,7 +264,7 @@ app.post('/guardar-consulta', async (req, res) => {
             console.error('⚠️ Error guardando en Sheets (Supabase sí guardó):', sheetsError.message);
         }
 
-        res.json({ success: true });
+        res.json({ success: true, sheetsOk: false, sheetsWarning: 'No se pudo guardar en Google Sheets' });
 
     } catch (error) { 
         console.error('Error guardar consulta:', error);

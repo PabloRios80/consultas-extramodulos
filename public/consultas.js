@@ -303,11 +303,14 @@ if (searchPatientBtn) {
             if (estudiosContainer) estudiosContainer.innerHTML = '<p class="text-gray-600 p-4"><i class="fas fa-spinner fa-spin mr-2"></i> Cargando estudios...</p>';
 
             try {
-                const response = await fetch('/obtener-estudios-paciente', {
+                const response = await fetch('https://acceso.diapreventivoiapos.com/api/estudios-paciente', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ dni: currentPatientDNI })
-                });
+                    headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('dpToken')
+                },
+                body: JSON.stringify({ dni: currentPatientDNI })
+            });
                 const result = await response.json();
 
                 if (result.success && result.estudios && result.estudios.length > 0) {
