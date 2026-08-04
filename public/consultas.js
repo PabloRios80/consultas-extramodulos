@@ -454,7 +454,6 @@ document.addEventListener("DOMContentLoaded", () => {
           ? `${window.dpProfesional.nombre} ${window.dpProfesional.apellido}`
           : "Desconocido",
         Fecha: new Date().toLocaleDateString("es-AR"),
-        id_sede_dp: window.dpProfesional?.id_sede_dp || null,
       };
 
       if (!payload.DNI || !payload.Apellido || !payload["motivo de consulta"]) {
