@@ -175,16 +175,31 @@ function mostrarMensaje(texto, tipo) {
 app.post('/buscar', async (req, res) => {
     try {
         const dniABuscar = String(req.body.dni).trim();
-        const sheet = doc.sheetsByIndex[0];
-        await sheet.loadHeaderRow();
-        const rows = await sheet.getRows();
-        const paciente = rows.find(r => String(r['DNI'] || r['Documento'] || '').trim() === dniABuscar);
+        const { data: paciente, error } = await supabase
+            .from('afiliados')
+            .select('dni, nombre, apellido, edad, sexo_biologico')
+            .eq('dni', dniABuscar)
+            .maybeSingle();
+
+        if (error) throw error;
+
         if (paciente) {
-            res.json({ pacientePrincipal: { DNI: paciente.DNI || paciente.Documento, Nombre: paciente.Nombre, Apellido: paciente.Apellido, Edad: paciente.Edad || '', Sexo: paciente.Sexo || '' } });
+            res.json({
+                pacientePrincipal: {
+                    DNI: paciente.dni,
+                    Nombre: paciente.nombre,
+                    Apellido: paciente.apellido,
+                    Edad: paciente.edad || '',
+                    Sexo: paciente.sexo_biologico || '',
+                },
+            });
         } else {
             res.json({ error: 'DNI no encontrado.' });
         }
-    } catch (error) { res.status(500).json({ error: 'Error al buscar' }); }
+    } catch (error) {
+        console.error('Error en /buscar:', error.message);
+        res.status(500).json({ error: 'Error al buscar' });
+    }
 });
 
 // Documento descartable exclusivo para /obtener-estudios-paciente,
