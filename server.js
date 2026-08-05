@@ -187,26 +187,50 @@ app.post('/buscar', async (req, res) => {
     } catch (error) { res.status(500).json({ error: 'Error al buscar' }); }
 });
 
+// Documento descartable exclusivo para /obtener-estudios-paciente,
+// para no acumular memoria en el `doc` global compartido con /buscar.
+async function buscarEstudiosConDocumentoDescartable(dni) {
+    const docTemporal = new GoogleSpreadsheet(SPREADSHEET_ID_LECTURA);
+    await docTemporal.useServiceAccountAuth({
+        client_email: credentials.client_email,
+        private_key: credentials.private_key.replace(/\\n/g, '\n'),
+    });
+    await docTemporal.loadInfo();
+
+    const estudiosEncontrados = [];
+    const hojasDeEstudios = ['Mamografia', 'Laboratorio', 'Ecografia', 'Espirometria', 'Densitometria', 'Enfermeria', 'Eco mamaria', 'Oftalmologia'];
+
+    for (const sheetName of hojasDeEstudios) {
+        try {
+            const sheet = docTemporal.sheetsByTitle[sheetName];
+            if (!sheet) continue;
+            await sheet.loadHeaderRow();
+            const rows = await sheet.getRows();
+            const filtrados = rows.filter(row => String(row['DNI'] || '').trim() === String(dni).trim());
+            filtrados.forEach(row => {
+                const estudio = {};
+                sheet.headerValues.forEach(header => { estudio[header] = row[header] || ''; });
+                let baseData = { TipoEstudio: sheetName, Fecha: estudio['Fecha'] || estudio['Fecha_cierre_Enf'] || 'N/A', LinkPDF: estudio['LinkPDF'] || estudio['Espirometria (Enlace a PDF)'] || '' };
+                if (sheetName === 'Laboratorio') { baseData.ResultadosLaboratorio = estudio; }
+                else if (sheetName === 'Enfermeria') { baseData.ResultadosEnfermeria = { 'Altura': estudio['Altura (cm)'], 'Peso': estudio['Peso (kg)'], 'Presion_Arterial': estudio['Presion Arterial (mmhg)'] }; }
+                else { baseData.Resultado = estudio['Resultado'] || estudio['Normal/Patologica'] || 'N/A'; }
+                estudiosEncontrados.push(baseData);
+            });
+        } catch (e) { /* si una hoja falla, seguimos con las demás */ }
+    }
+
+    return estudiosEncontrados;
+}
+
 app.post('/obtener-estudios-paciente', async (req, res) => {
     try {
         const { dni } = req.body;
-        const estudiosEncontrados = [];
-        const hojasDeEstudios = ['Mamografia', 'Laboratorio', 'Ecografia', 'Espirometria', 'Densitometria', 'Enfermeria', 'Eco mamaria', 'Oftalmologia'];
-        for (const sheetName of hojasDeEstudios) {
-            try {
-                const sheetData = await getDataFromSpecificSheet(sheetName);
-                const filtrados = sheetData.filter(row => String(row['DNI'] || '').trim() === String(dni).trim());
-                filtrados.forEach(estudio => {
-                    let baseData = { TipoEstudio: sheetName, Fecha: estudio['Fecha'] || estudio['Fecha_cierre_Enf'] || 'N/A', LinkPDF: estudio['LinkPDF'] || estudio['Espirometria (Enlace a PDF)'] || '' };
-                    if (sheetName === 'Laboratorio') { baseData.ResultadosLaboratorio = estudio; } 
-                    else if (sheetName === 'Enfermeria') { baseData.ResultadosEnfermeria = { 'Altura': estudio['Altura (cm)'], 'Peso': estudio['Peso (kg)'], 'Presion_Arterial': estudio['Presion Arterial (mmhg)'] }; } 
-                    else { baseData.Resultado = estudio['Resultado'] || estudio['Normal/Patologica'] || 'N/A'; }
-                    estudiosEncontrados.push(baseData);
-                });
-            } catch (e) { }
-        }
+        const estudiosEncontrados = await buscarEstudiosConDocumentoDescartable(dni);
         res.json({ success: true, estudios: estudiosEncontrados });
-    } catch (error) { res.status(500).json({ error: 'Error al obtener estudios' }); }
+    } catch (error) {
+        console.error('Error en /obtener-estudios-paciente:', error.message);
+        res.status(500).json({ error: 'Error al obtener estudios' });
+    }
 });
 app.post('/guardar-consulta', async (req, res) => {
     const data = req.body;
