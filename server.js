@@ -278,18 +278,21 @@ app.post('/guardar-consulta', async (req, res) => {
         // Registrar consulta médica extramódulo como acción facturable (420101 / interno C040101)
         try {
             const hoy = new Date().toISOString().split('T')[0];
+            const idSedeDp = data.id_sede_dp ? parseInt(data.id_sede_dp) : null;
+
             await supabase.from('practicas_autorizadas').insert({
                 dni: data.DNI,
                 nombre_completo: `${data.Apellido || ''} ${data.Nombre || ''}`.trim(),
                 descripcion_practica: 'Consulta médica (Extramódulo)',
+                codigo_prestacion: '420101',
                 estado: 'REALIZADA',
                 fecha_autorizacion: hoy,
                 fecha_carga: hoy,
                 nombre_prestador: data.Profesional || 'Desconocido',
+                id_sede_dp: idSedeDp,
             });
             console.log('✅ Consulta Extramódulo registrada como REALIZADA para DNI:', data.DNI);
 
-            const idSedeDp = data.id_sede_dp ? parseInt(data.id_sede_dp) : null;
             if (idSedeDp) {
                 const { data: prestadoresCoordSede } = await supabase
                     .from('prestador_sedes')
@@ -315,11 +318,13 @@ app.post('/guardar-consulta', async (req, res) => {
                         dni: data.DNI,
                         nombre_completo: `${data.Apellido || ''} ${data.Nombre || ''}`.trim(),
                         descripcion_practica: 'Módulo Extramódulo',
+                        codigo_prestacion: '420101',
                         estado: 'REALIZADA',
                         fecha_autorizacion: hoy,
                         fecha_carga: hoy,
                         id_prestador: prestadorCoord.id,
                         nombre_prestador: prestadorCoord.nombre_institucion,
+                        id_sede_dp: idSedeDp,
                     });
                     console.log('✅ Módulo Extramódulo (420101) registrado para DNI:', data.DNI);
                 } else {
