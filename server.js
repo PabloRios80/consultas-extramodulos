@@ -278,7 +278,30 @@ app.post('/guardar-consulta', async (req, res) => {
         // Registrar consulta médica extramódulo como acción facturable (420101 / interno C040101)
         try {
             const hoy = new Date().toISOString().split('T')[0];
-            const idSedeDp = data.id_sede_dp ? parseInt(data.id_sede_dp) : null;
+
+            // La sede correcta es la de la ADMISIÓN REAL del paciente en
+            // tablero_dia (si existe una para hoy), no la del perfil/sesión
+            // del profesional — mismo criterio que en el cierre de adultos
+            // y pediatría. Si no tiene admisión de hoy, se cae al valor
+            // que mandó el frontend.
+            let idSedeDp = data.id_sede_dp ? parseInt(data.id_sede_dp) : null;
+            try {
+                const hoyLocal = new Intl.DateTimeFormat('en-CA', {
+                    timeZone: 'America/Argentina/Buenos_Aires',
+                }).format(new Date());
+                const { data: admisionHoy } = await supabase
+                    .from('tablero_dia')
+                    .select('id_sede_dp')
+                    .eq('dni', data.DNI)
+                    .eq('fecha', hoyLocal)
+                    .not('id_sede_dp', 'is', null)
+                    .maybeSingle();
+                if (admisionHoy?.id_sede_dp) {
+                    idSedeDp = admisionHoy.id_sede_dp;
+                }
+            } catch (eSedeReal) {
+                console.warn('No se pudo verificar la sede real por tablero_dia, se usa la del profesional:', eSedeReal.message);
+            }
 
             await supabase.from('practicas_autorizadas').insert({
                 dni: data.DNI,
