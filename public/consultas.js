@@ -62,8 +62,23 @@ document.addEventListener("DOMContentLoaded", () => {
               data.iapos.sexo === "2" ? "Femenino" : "Masculino";
           currentPatientDNI = dni;
           currentPatientData = data.iapos;
+                } else if (response.ok && data.iapos == null) {
+          // El padrón de IAPOS no respondió: no sabemos si está activo o no.
+          // Se deja continuar con carga manual para no frenar la atención.
+          alert(
+            "⚠️ No se pudo verificar el estado del afiliado en IAPOS (el padrón no respondió). Verificá manualmente y completá los datos del paciente.",
+          );
+          currentPatientDNI = dni;
+          currentPatientData = {
+            esActivo: null,
+            nombre: null,
+            edad: null,
+            sexo: null,
+            localidad: null,
+          };
         } else {
-          alert("⚠️ El afiliado no está activo en IAPOS.");
+          // IAPOS respondió que el afiliado NO está activo: esto sí bloquea.
+          alert("⛔ El afiliado no está activo en IAPOS.");
           return;
         }
 
